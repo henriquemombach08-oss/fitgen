@@ -53,8 +53,8 @@ Regras:
 
 export async function POST(request: NextRequest) {
   const client = new OpenAI({
-    apiKey: process.env.XAI_API_KEY,
-    baseURL: "https://api.x.ai/v1",
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
   });
 
   try {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildPrompt(body);
 
     const completion = await client.chat.completions.create({
-      model: "grok-3-mini",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
