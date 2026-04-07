@@ -61,3 +61,11 @@ export interface GenerateResponse {
   workout?: Workout;
   error?: string;
 }
+
+export interface SavedWorkout {
+  id: string;
+  workout: Workout;
+  formData: WorkoutFormData;
+  createdAt: string;
+  isFavorite: boolean;
+}

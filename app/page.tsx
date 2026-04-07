@@ -3,8 +3,10 @@
 import { useState } from "react";
 import WorkoutForm from "@/components/WorkoutForm";
 import WorkoutResult from "@/components/WorkoutResult";
+import WorkoutHistory from "@/components/WorkoutHistory";
 import LoadingState from "@/components/LoadingState";
-import { WorkoutFormData, Workout, GenerateResponse } from "@/types/workout";
+import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
+import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
 type AppState = "idle" | "loading" | "result" | "error";
 
@@ -14,10 +16,16 @@ export default function Home() {
   const [lastFormData, setLastFormData] = useState<WorkoutFormData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
 
+  // Agente 1 — Histórico
+  const { saveWorkout, toggleFavorite } = useWorkoutHistory();
+  const [currentSaved, setCurrentSaved] = useState<SavedWorkout | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   async function generateWorkout(data: WorkoutFormData) {
     setAppState("loading");
     setLastFormData(data);
     setErrorMsg("");
+    setCurrentSaved(null);
 
     try {
       const res = await fetch("/api/generate", {
@@ -34,8 +42,13 @@ export default function Home() {
         return;
       }
 
-      setWorkout(json.workout!);
+      const generatedWorkout = json.workout!;
+      setWorkout(generatedWorkout);
       setAppState("result");
+
+      // Salvar automaticamente no histórico após gerar
+      const saved = saveWorkout(generatedWorkout, data);
+      setCurrentSaved(saved);
     } catch {
       setErrorMsg("Falha na conexão. Verifique sua internet e tente novamente.");
       setAppState("error");
@@ -52,6 +65,24 @@ export default function Home() {
     setAppState("idle");
     setWorkout(null);
     setErrorMsg("");
+    setCurrentSaved(null);
+  }
+
+  // Agente 1 — Carregar treino do histórico
+  function handleLoadFromHistory(saved: SavedWorkout) {
+    setWorkout(saved.workout);
+    setLastFormData(saved.formData);
+    setCurrentSaved(saved);
+    setAppState("result");
+  }
+
+  // Agente 1 — Toggle favorito do treino atual
+  function handleToggleFavorite() {
+    if (!currentSaved) return;
+    toggleFavorite(currentSaved.id);
+    setCurrentSaved((prev) =>
+      prev ? { ...prev, isFavorite: !prev.isFavorite } : prev
+    );
   }
 
   return (
@@ -69,6 +100,13 @@ export default function Home() {
       {/* Glow de fundo */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Agente 1 — WorkoutHistory drawer */}
+      <WorkoutHistory
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onLoad={handleLoadFromHistory}
+      />
+
       <div className="relative max-w-lg mx-auto px-4 py-8 pb-16">
         {/* Header */}
         <header className="text-center mb-10">
@@ -79,9 +117,22 @@ export default function Home() {
             <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
           </div>
 
-          <h1 className="text-4xl font-black tracking-tight text-white">
-            Fit<span className="text-orange-500">Gen</span>
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-4xl font-black tracking-tight text-white">
+              Fit<span className="text-orange-500">Gen</span>
+            </h1>
+
+            {/* Agente 1 — Botão histórico no header */}
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              aria-label="Abrir histórico de treinos"
+              title="Histórico de treinos"
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-700 bg-gray-800 text-gray-400 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-200 active:scale-90 text-base"
+            >
+              🕓
+            </button>
+          </div>
+
           <p className="mt-2 text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">
             Treinos personalizados gerados por IA em segundos
           </p>
@@ -151,6 +202,9 @@ export default function Home() {
                     formData={lastFormData}
                     onRegenerate={handleRegenerate}
                     isLoading={false}
+                    savedWorkout={currentSaved}
+                    onToggleFavorite={handleToggleFavorite}
+                    onOpenHistory={() => setIsHistoryOpen(true)}
                   />
                 </div>
               )}
