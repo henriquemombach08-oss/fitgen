@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "FitGen — Treinos Personalizados com IA",
@@ -16,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="dark">
       <body className="bg-[#0a0a0a] text-white min-h-screen antialiased">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

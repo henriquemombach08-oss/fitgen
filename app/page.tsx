@@ -5,6 +5,7 @@ import WorkoutForm from "@/components/WorkoutForm";
 import WorkoutResult from "@/components/WorkoutResult";
 import WorkoutHistory from "@/components/WorkoutHistory";
 import LoadingState from "@/components/LoadingState";
+import AuthButton from "@/components/AuthButton";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -122,7 +123,7 @@ export default function Home() {
               Fit<span className="text-orange-500">Gen</span>
             </h1>
 
-            {/* Agente 1 — Botão histórico no header */}
+            {/* Botão histórico */}
             <button
               onClick={() => setIsHistoryOpen(true)}
               aria-label="Abrir histórico de treinos"
@@ -131,6 +132,9 @@ export default function Home() {
             >
               🕓
             </button>
+
+            {/* Login Google */}
+            <AuthButton />
           </div>
 
           <p className="mt-2 text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">
