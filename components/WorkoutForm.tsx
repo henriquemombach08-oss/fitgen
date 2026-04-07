@@ -16,36 +16,19 @@ interface WorkoutFormProps {
 }
 
 const basicMuscleGroups: MuscleGroup[] = [
-  "Peito",
-  "Costas",
-  "Pernas",
-  "Ombros",
-  "Braços",
-  "Full Body",
+  "Peito", "Costas", "Pernas", "Ombros", "Braços", "Full Body",
 ];
-
 const advancedMuscleGroups: MuscleGroup[] = [
   ...basicMuscleGroups,
-  "Glúteos",
-  "Core / Abdômen",
-  "Panturrilha",
-  "Push (Peito + Ombro + Tríceps)",
-  "Pull (Costas + Bíceps)",
-  "Upper Body",
+  "Glúteos", "Core / Abdômen", "Panturrilha",
+  "Push (Peito + Ombro + Tríceps)", "Pull (Costas + Bíceps)", "Upper Body",
 ];
 
 const basicEquipments: Equipment[] = [
-  "Academia completa",
-  "Halteres",
-  "Barra + anilhas",
-  "Sem equipamento",
+  "Academia completa", "Halteres", "Barra + anilhas", "Sem equipamento",
 ];
-
 const advancedEquipments: Equipment[] = [
-  ...basicEquipments,
-  "Cabo / Polia",
-  "Máquinas",
-  "Kettlebell",
+  ...basicEquipments, "Cabo / Polia", "Máquinas", "Kettlebell",
 ];
 
 const basicDurations: Duration[] = ["30 min", "45 min", "60 min", "90 min"];
@@ -57,29 +40,18 @@ const basicGoals: Goal[] = ["Hipertrofia", "Força", "Resistência", "Emagrecime
 const advancedGoals: Goal[] = [...basicGoals, "Potência"];
 
 const muscleIcons: Record<MuscleGroup, string> = {
-  Peito: "🫁",
-  Costas: "🔙",
-  Pernas: "🦵",
-  Ombros: "💪",
-  Braços: "💪",
-  "Full Body": "⚡",
-  Glúteos: "🍑",
-  "Core / Abdômen": "🎯",
-  Panturrilha: "🦶",
-  "Push (Peito + Ombro + Tríceps)": "🚀",
-  "Pull (Costas + Bíceps)": "🧲",
-  "Upper Body": "🏆",
+  Peito: "🫁", Costas: "🔙", Pernas: "🦵", Ombros: "💪", Braços: "💪",
+  "Full Body": "⚡", Glúteos: "🍑", "Core / Abdômen": "🎯",
+  Panturrilha: "🦶", "Push (Peito + Ombro + Tríceps)": "🚀",
+  "Pull (Costas + Bíceps)": "🧲", "Upper Body": "🏆",
 };
 
 const goalIcons: Record<Goal, string> = {
-  Hipertrofia: "📈",
-  Força: "🏋️",
-  Resistência: "🏃",
-  Emagrecimento: "🔥",
-  Potência: "⚡",
+  Hipertrofia: "📈", Força: "🏋️", Resistência: "🏃",
+  Emagrecimento: "🔥", Potência: "⚡",
 };
 
-function SelectGroup<T extends string>({
+function SingleSelectGroup<T extends string>({
   label,
   options,
   value,
@@ -103,7 +75,7 @@ function SelectGroup<T extends string>({
       </label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt, idx) => {
-          const isAdvancedOption = advanced && basicCount !== undefined && idx >= basicCount;
+          const isAdvOpt = advanced && basicCount !== undefined && idx >= basicCount;
           return (
             <button
               key={opt}
@@ -111,10 +83,10 @@ function SelectGroup<T extends string>({
               onClick={() => onChange(opt)}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
                 value === opt
-                  ? isAdvancedOption
+                  ? isAdvOpt
                     ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-500/25"
                     : "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
-                  : isAdvancedOption
+                  : isAdvOpt
                   ? "bg-gray-800 border-violet-800/50 text-violet-300 hover:border-violet-500/50 hover:text-white"
                   : "bg-gray-800 border-gray-700 text-gray-300 hover:border-orange-500/50 hover:text-white"
               }`}
@@ -129,13 +101,79 @@ function SelectGroup<T extends string>({
   );
 }
 
+function MultiSelectGroup<T extends string>({
+  label,
+  options,
+  values,
+  onChange,
+  icons,
+  advanced,
+  basicCount,
+}: {
+  label: string;
+  options: T[];
+  values: T[];
+  onChange: (v: T[]) => void;
+  icons?: Record<string, string>;
+  advanced?: boolean;
+  basicCount?: number;
+}) {
+  function toggle(opt: T) {
+    if (values.includes(opt)) {
+      if (values.length === 1) return; // mínimo 1 selecionado
+      onChange(values.filter((v) => v !== opt));
+    } else {
+      onChange([...values, opt]);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wider">
+          {label}
+        </label>
+        <span className="text-xs text-gray-500">
+          {values.length} selecionado{values.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt, idx) => {
+          const selected = values.includes(opt);
+          const isAdvOpt = advanced && basicCount !== undefined && idx >= basicCount;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => toggle(opt)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
+                selected
+                  ? isAdvOpt
+                    ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-500/25"
+                    : "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
+                  : isAdvOpt
+                  ? "bg-gray-800 border-violet-800/50 text-violet-300 hover:border-violet-500/50 hover:text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-300 hover:border-orange-500/50 hover:text-white"
+              }`}
+            >
+              {selected && <span className="mr-1 text-xs">✓</span>}
+              {icons?.[opt] && <span className="mr-1">{icons[opt]}</span>}
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
   const [form, setForm] = useState<WorkoutFormData>({
-    muscleGroup: "Full Body",
+    muscleGroups: ["Full Body"],
     equipment: "Academia completa",
     duration: "60 min",
     level: "Intermediário",
-    goal: "Hipertrofia",
+    goals: ["Hipertrofia"],
     advancedMode: false,
   });
 
@@ -149,10 +187,18 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
       return {
         ...f,
         advancedMode: next,
-        muscleGroup: !next && !basicMGs.includes(f.muscleGroup) ? "Full Body" : f.muscleGroup,
+        muscleGroups: !next
+          ? f.muscleGroups.filter((g) => basicMGs.includes(g)).length > 0
+            ? f.muscleGroups.filter((g) => basicMGs.includes(g))
+            : ["Full Body"]
+          : f.muscleGroups,
         equipment: !next && !basicEqs.includes(f.equipment) ? "Academia completa" : f.equipment,
         duration: !next && !basicDurs.includes(f.duration) ? "60 min" : f.duration,
-        goal: !next && !basicGs.includes(f.goal) ? "Hipertrofia" : f.goal,
+        goals: !next
+          ? f.goals.filter((g) => basicGs.includes(g)).length > 0
+            ? f.goals.filter((g) => basicGs.includes(g))
+            : ["Hipertrofia"]
+          : f.goals,
       };
     });
   }
@@ -162,10 +208,10 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
     onSubmit(form);
   }
 
-  const muscleGroups = form.advancedMode ? advancedMuscleGroups : basicMuscleGroups;
-  const equipments = form.advancedMode ? advancedEquipments : basicEquipments;
-  const durations = form.advancedMode ? advancedDurations : basicDurations;
-  const goals = form.advancedMode ? advancedGoals : basicGoals;
+  const muscleGroupOptions = form.advancedMode ? advancedMuscleGroups : basicMuscleGroups;
+  const equipmentOptions = form.advancedMode ? advancedEquipments : basicEquipments;
+  const durationOptions = form.advancedMode ? advancedDurations : basicDurations;
+  const goalOptions = form.advancedMode ? advancedGoals : basicGoals;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -205,46 +251,46 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
         </div>
       </button>
 
-      <SelectGroup
+      <MultiSelectGroup
         label="Grupo Muscular"
-        options={muscleGroups}
-        value={form.muscleGroup}
-        onChange={(v) => setForm((f) => ({ ...f, muscleGroup: v }))}
+        options={muscleGroupOptions}
+        values={form.muscleGroups}
+        onChange={(v) => setForm((f) => ({ ...f, muscleGroups: v }))}
         icons={muscleIcons}
         advanced={form.advancedMode}
         basicCount={basicMuscleGroups.length}
       />
 
-      <SelectGroup
+      <SingleSelectGroup
         label="Equipamento"
-        options={equipments}
+        options={equipmentOptions}
         value={form.equipment}
         onChange={(v) => setForm((f) => ({ ...f, equipment: v }))}
         advanced={form.advancedMode}
         basicCount={basicEquipments.length}
       />
 
-      <SelectGroup
+      <SingleSelectGroup
         label="Tempo Disponível"
-        options={durations}
+        options={durationOptions}
         value={form.duration}
         onChange={(v) => setForm((f) => ({ ...f, duration: v }))}
         advanced={form.advancedMode}
         basicCount={basicDurations.length}
       />
 
-      <SelectGroup
+      <SingleSelectGroup
         label="Nível"
         options={levels}
         value={form.level}
         onChange={(v) => setForm((f) => ({ ...f, level: v }))}
       />
 
-      <SelectGroup
+      <MultiSelectGroup
         label="Objetivo"
-        options={goals}
-        value={form.goal}
-        onChange={(v) => setForm((f) => ({ ...f, goal: v }))}
+        options={goalOptions}
+        values={form.goals}
+        onChange={(v) => setForm((f) => ({ ...f, goals: v }))}
         icons={goalIcons}
         advanced={form.advancedMode}
         basicCount={basicGoals.length}
@@ -274,19 +320,8 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             Gerando treino...
           </span>

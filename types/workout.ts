@@ -33,11 +33,11 @@ export type Goal =
   | "Potência";
 
 export interface WorkoutFormData {
-  muscleGroup: MuscleGroup;
+  muscleGroups: MuscleGroup[];
   equipment: Equipment;
   duration: Duration;
   level: Level;
-  goal: Goal;
+  goals: Goal[];
   advancedMode: boolean;
 }
 

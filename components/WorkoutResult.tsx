@@ -15,8 +15,8 @@ function workoutToText(workout: Workout, formData: WorkoutFormData): string {
     `🏋️ ${workout.nome}`,
     `📋 ${workout.descricao}`,
     `⏱️ Duração estimada: ${workout.duracao_estimada}`,
-    `🎯 Objetivo: ${formData.goal} | Nível: ${formData.level}`,
-    `💪 Foco: ${formData.muscleGroup} | Equipamento: ${formData.equipment}`,
+    `🎯 Objetivos: ${formData.goals.join(", ")} | Nível: ${formData.level}`,
+    `💪 Foco: ${formData.muscleGroups.join(", ")} | Equipamento: ${formData.equipment}`,
     "",
     "─────────────────────────────",
     "EXERCÍCIOS",
@@ -101,9 +101,9 @@ async function exportToPDF(workout: Workout, formData: WorkoutFormData) {
 
   // ── Tags row
   const tags = [
-    { label: formData.muscleGroup },
+    ...formData.muscleGroups.map((g) => ({ label: g })),
+    ...formData.goals.map((g) => ({ label: g })),
     { label: formData.level },
-    { label: formData.goal },
     { label: formData.equipment },
     { label: workout.duracao_estimada },
   ];
@@ -265,7 +265,7 @@ export default function WorkoutResult({
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mt-4">
-            {[formData.muscleGroup, formData.level, formData.goal, formData.equipment].map((tag) => (
+            {[...formData.muscleGroups, ...formData.goals, formData.level, formData.equipment].map((tag) => (
               <span
                 key={tag}
                 className="bg-gray-800 border border-gray-700 text-gray-400 text-xs px-2.5 py-1 rounded-md"

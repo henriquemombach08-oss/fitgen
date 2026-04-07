@@ -29,11 +29,11 @@ function buildPrompt(data: WorkoutFormData): string {
 
   return `Você é um personal trainer especialista. Crie um treino personalizado com base nos seguintes parâmetros:
 
-- Grupo muscular: ${data.muscleGroup}
+- Grupos musculares: ${data.muscleGroups.join(", ")}
 - Equipamento disponível: ${data.equipment}
 - Tempo disponível: ${data.duration}
 - Nível do aluno: ${data.level}
-- Objetivo: ${data.goal}
+- Objetivos: ${data.goals.join(", ")}
 - Modo Avançado: ${data.advancedMode ? "SIM" : "NÃO"}
 
 Retorne APENAS um objeto JSON válido, sem markdown, sem explicações, sem texto antes ou depois. O JSON deve seguir exatamente este formato:
@@ -59,7 +59,8 @@ Regras:
 - Ajuste séries, repetições e descanso ao nível e objetivo
 - Use exercícios reais e seguros
 - Nível ${data.level}: ${levelGuide[data.level] ?? "volume moderado"}
-- Objetivo ${data.goal}: ${goalGuide[data.goal] ?? "volume moderado"}${advancedInstructions}`;
+- Objetivos ${data.goals.join(", ")}: ${data.goals.map((g) => goalGuide[g] ?? "volume moderado").join(" | ")}
+- Distribua os exercícios proporcionalmente entre os grupos musculares selecionados${advancedInstructions}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -71,8 +72,8 @@ export async function POST(request: NextRequest) {
   try {
     const body: WorkoutFormData = await request.json();
 
-    const { muscleGroup, equipment, duration, level, goal } = body;
-    if (!muscleGroup || !equipment || !duration || !level || !goal) {
+    const { muscleGroups, equipment, duration, level, goals } = body;
+    if (!muscleGroups?.length || !equipment || !duration || !level || !goals?.length) {
       return NextResponse.json(
         { error: "Todos os campos são obrigatórios." },
         { status: 400 }
