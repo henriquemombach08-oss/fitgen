@@ -160,7 +160,7 @@ export default function Home() {
           {/* Rodapé */}
           <p className="text-center text-gray-700 text-xs mt-6">
             Powered by{" "}
-            <span className="text-orange-500/60 font-semibold">Grok (xAI)</span>
+            <span className="text-orange-500/60 font-semibold">Groq (Llama 3.3)</span>
             {" · "}
             <span className="text-gray-600">FitGen v1.0</span>
           </p>

@@ -3,6 +3,30 @@ import OpenAI from "openai";
 import { WorkoutFormData, Workout } from "@/types/workout";
 
 function buildPrompt(data: WorkoutFormData): string {
+  const exerciseCount = data.advancedMode ? "entre 8 e 12" : "entre 5 e 8";
+
+  const goalGuide: Record<string, string> = {
+    Hipertrofia: "8-12 reps, 60-90s descanso, foco em tensão muscular",
+    Força: "3-6 reps, 2-3min descanso, cargas pesadas",
+    Resistência: "15-20 reps, 30-45s descanso, cargas leves",
+    Emagrecimento: "12-15 reps, 45-60s descanso, circuito metabólico",
+    Potência: "3-5 reps explosivas, 2-3min descanso, movimentos olímpicos e pliométricos",
+  };
+
+  const levelGuide: Record<string, string> = {
+    Iniciante: "movimentos básicos, menos volume, mais descanso",
+    Intermediário: "exercícios compostos, volume moderado",
+    Avançado: "exercícios avançados, alto volume, técnicas intensas",
+  };
+
+  const advancedInstructions = data.advancedMode
+    ? `
+- MODO AVANÇADO ATIVO: inclua pelo menos 2 técnicas avançadas entre os exercícios, como:
+  supersets (indicar na dica), drop sets, rest-pause, tempo controlado (ex: 3-1-2), ou cluster sets.
+- Priorize exercícios compostos e variações avançadas.
+- O campo "dica" deve mencionar a técnica avançada quando aplicável.`
+    : "";
+
   return `Você é um personal trainer especialista. Crie um treino personalizado com base nos seguintes parâmetros:
 
 - Grupo muscular: ${data.muscleGroup}
@@ -10,6 +34,7 @@ function buildPrompt(data: WorkoutFormData): string {
 - Tempo disponível: ${data.duration}
 - Nível do aluno: ${data.level}
 - Objetivo: ${data.goal}
+- Modo Avançado: ${data.advancedMode ? "SIM" : "NÃO"}
 
 Retorne APENAS um objeto JSON válido, sem markdown, sem explicações, sem texto antes ou depois. O JSON deve seguir exatamente este formato:
 
@@ -30,25 +55,11 @@ Retorne APENAS um objeto JSON válido, sem markdown, sem explicações, sem text
 }
 
 Regras:
-- Inclua entre 5 e 8 exercícios adequados ao equipamento informado
+- Inclua ${exerciseCount} exercícios adequados ao equipamento informado
 - Ajuste séries, repetições e descanso ao nível e objetivo
 - Use exercícios reais e seguros
-- Nível ${data.level}: ${
-    data.level === "Iniciante"
-      ? "movimentos básicos, menos volume, mais descanso"
-      : data.level === "Intermediário"
-      ? "exercícios compostos, volume moderado"
-      : "exercícios avançados, alto volume, técnicas intensas"
-  }
-- Objetivo ${data.goal}: ${
-    data.goal === "Hipertrofia"
-      ? "8-12 reps, 60-90s descanso, foco em tensão muscular"
-      : data.goal === "Força"
-      ? "3-6 reps, 2-3min descanso, cargas pesadas"
-      : data.goal === "Resistência"
-      ? "15-20 reps, 30-45s descanso, cargas leves"
-      : "12-15 reps, 45-60s descanso, circuito metabólico"
-  }`;
+- Nível ${data.level}: ${levelGuide[data.level] ?? "volume moderado"}
+- Objetivo ${data.goal}: ${goalGuide[data.goal] ?? "volume moderado"}${advancedInstructions}`;
 }
 
 export async function POST(request: NextRequest) {

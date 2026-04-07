@@ -4,15 +4,24 @@ export type MuscleGroup =
   | "Pernas"
   | "Ombros"
   | "Braços"
-  | "Full Body";
+  | "Full Body"
+  | "Glúteos"
+  | "Core / Abdômen"
+  | "Panturrilha"
+  | "Push (Peito + Ombro + Tríceps)"
+  | "Pull (Costas + Bíceps)"
+  | "Upper Body";
 
 export type Equipment =
   | "Academia completa"
   | "Halteres"
   | "Barra + anilhas"
-  | "Sem equipamento";
+  | "Sem equipamento"
+  | "Cabo / Polia"
+  | "Máquinas"
+  | "Kettlebell";
 
-export type Duration = "30 min" | "45 min" | "60 min" | "90 min";
+export type Duration = "30 min" | "45 min" | "60 min" | "90 min" | "120 min";
 
 export type Level = "Iniciante" | "Intermediário" | "Avançado";
 
@@ -20,7 +29,8 @@ export type Goal =
   | "Hipertrofia"
   | "Força"
   | "Resistência"
-  | "Emagrecimento";
+  | "Emagrecimento"
+  | "Potência";
 
 export interface WorkoutFormData {
   muscleGroup: MuscleGroup;
@@ -28,6 +38,7 @@ export interface WorkoutFormData {
   duration: Duration;
   level: Level;
   goal: Goal;
+  advancedMode: boolean;
 }
 
 export interface Exercise {

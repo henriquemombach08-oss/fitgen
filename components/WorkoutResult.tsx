@@ -39,6 +39,175 @@ function workoutToText(workout: Workout, formData: WorkoutFormData): string {
   return lines.join("\n");
 }
 
+async function exportToPDF(workout: Workout, formData: WorkoutFormData) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  const contentW = pageW - margin * 2;
+  let y = 0;
+
+  function addPage() {
+    doc.addPage();
+    y = margin;
+  }
+
+  function checkY(needed: number) {
+    if (y + needed > doc.internal.pageSize.getHeight() - margin) {
+      addPage();
+    }
+  }
+
+  // ── Header bar
+  doc.setFillColor(249, 115, 22); // orange-500
+  doc.rect(0, 0, pageW, 18, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("FitGen", margin, 12);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("Treino gerado por IA", pageW - margin, 12, { align: "right" });
+
+  y = 30;
+
+  // ── Modo avançado badge
+  if (formData.advancedMode) {
+    doc.setFillColor(109, 40, 217); // violet-700
+    doc.roundedRect(margin, y - 5, 38, 7, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    doc.text("MODO AVANCADO", margin + 2, y);
+    y += 8;
+  }
+
+  // ── Workout name
+  doc.setTextColor(15, 15, 15);
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  const nameLines = doc.splitTextToSize(workout.nome, contentW);
+  doc.text(nameLines, margin, y);
+  y += nameLines.length * 8 + 2;
+
+  // ── Description
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(80, 80, 80);
+  const descLines = doc.splitTextToSize(workout.descricao, contentW);
+  doc.text(descLines, margin, y);
+  y += descLines.length * 5 + 6;
+
+  // ── Tags row
+  const tags = [
+    { label: formData.muscleGroup },
+    { label: formData.level },
+    { label: formData.goal },
+    { label: formData.equipment },
+    { label: workout.duracao_estimada },
+  ];
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  let tagX = margin;
+  tags.forEach((tag) => {
+    const tw = doc.getTextWidth(tag.label) + 6;
+    doc.setFillColor(245, 245, 245);
+    doc.setDrawColor(200, 200, 200);
+    doc.roundedRect(tagX, y - 4, tw, 7, 2, 2, "FD");
+    doc.setTextColor(60, 60, 60);
+    doc.text(tag.label, tagX + 3, y);
+    tagX += tw + 3;
+  });
+  y += 10;
+
+  // ── Divider
+  doc.setDrawColor(229, 229, 229);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageW - margin, y);
+  y += 7;
+
+  // ── Section title
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(150, 150, 150);
+  doc.text(`${workout.exercicios.length} EXERCICIOS`, margin, y);
+  y += 8;
+
+  // ── Exercises
+  workout.exercicios.forEach((ex, index) => {
+    checkY(28);
+
+    // number circle
+    doc.setFillColor(249, 115, 22);
+    doc.circle(margin + 4, y - 1, 4, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(index + 1), margin + 4, y, { align: "center" });
+
+    // Exercise name
+    doc.setTextColor(15, 15, 15);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(ex.nome, margin + 12, y);
+    y += 6;
+
+    // Stats
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Series: ${ex.series}x   Reps: ${ex.repeticoes}   Descanso: ${ex.descanso}`,
+      margin + 12,
+      y
+    );
+    y += 5;
+
+    // Tip
+    doc.setFillColor(255, 251, 235);
+    const tipLines = doc.splitTextToSize(`Dica: ${ex.dica}`, contentW - 14);
+    const tipH = tipLines.length * 4.5 + 4;
+    doc.roundedRect(margin + 12, y - 3, contentW - 12, tipH, 2, 2, "F");
+    doc.setTextColor(120, 80, 20);
+    doc.setFontSize(8);
+    doc.text(tipLines, margin + 15, y);
+    y += tipH + 3;
+  });
+
+  // ── Final tip box
+  checkY(20);
+  y += 2;
+  doc.setDrawColor(59, 130, 246); // blue
+  doc.setFillColor(239, 246, 255);
+  const obsLines = doc.splitTextToSize(workout.observacao_final, contentW - 6);
+  const obsH = obsLines.length * 4.5 + 10;
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentW, obsH, 3, 3, "FD");
+  doc.setTextColor(37, 99, 235);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("DICA DO PERSONAL", margin + 4, y + 5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(30, 58, 138);
+  doc.text(obsLines, margin + 4, y + 10);
+  y += obsH + 8;
+
+  // ── Footer
+  checkY(10);
+  doc.setDrawColor(229, 229, 229);
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(180, 180, 180);
+  doc.text("Gerado por FitGen", margin, y);
+  doc.text(new Date().toLocaleDateString("pt-BR"), pageW - margin, y, { align: "right" });
+
+  const fileName = `${workout.nome.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_")}.pdf`;
+  doc.save(fileName);
+}
+
 export default function WorkoutResult({
   workout,
   formData,
@@ -46,12 +215,22 @@ export default function WorkoutResult({
   isLoading,
 }: WorkoutResultProps) {
   const [copied, setCopied] = useState(false);
+  const [savingPDF, setSavingPDF] = useState(false);
 
   async function handleCopy() {
     const text = workoutToText(workout, formData);
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSavePDF() {
+    setSavingPDF(true);
+    try {
+      await exportToPDF(workout, formData);
+    } finally {
+      setSavingPDF(false);
+    }
   }
 
   return (
@@ -62,9 +241,16 @@ export default function WorkoutResult({
         <div className="relative">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-orange-400 text-xs font-semibold uppercase tracking-widest mb-1">
-                Treino Gerado
-              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-orange-400 text-xs font-semibold uppercase tracking-widest">
+                  Treino Gerado
+                </p>
+                {formData.advancedMode && (
+                  <span className="bg-violet-600/20 border border-violet-500/30 text-violet-300 text-xs font-bold px-2 py-0.5 rounded-md">
+                    ⚡ AVANÇADO
+                  </span>
+                )}
+              </div>
               <h2 className="text-2xl font-black text-white leading-tight">
                 {workout.nome}
               </h2>
@@ -104,7 +290,6 @@ export default function WorkoutResult({
             style={{ animationDelay: `${index * 60}ms` }}
           >
             <div className="flex items-start gap-4">
-              {/* Número */}
               <div className="shrink-0 w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
                 <span className="text-orange-400 text-sm font-bold">
                   {index + 1}
@@ -116,19 +301,12 @@ export default function WorkoutResult({
                   {ex.nome}
                 </h4>
 
-                {/* Stats */}
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <StatBadge
-                    icon="🔁"
-                    label="Séries"
-                    value={`${ex.series}x`}
-                    accent
-                  />
+                  <StatBadge icon="🔁" label="Séries" value={`${ex.series}x`} accent />
                   <StatBadge icon="💪" label="Reps" value={ex.repeticoes} />
                   <StatBadge icon="⏸️" label="Descanso" value={ex.descanso} />
                 </div>
 
-                {/* Dica */}
                 <p className="mt-2.5 text-gray-500 text-xs leading-relaxed border-l-2 border-gray-700 pl-2.5 group-hover:border-orange-500/30 group-hover:text-gray-400 transition-all">
                   💡 {ex.dica}
                 </p>
@@ -149,10 +327,10 @@ export default function WorkoutResult({
       </div>
 
       {/* Ações */}
-      <div className="flex gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <button
           onClick={handleCopy}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-700 bg-gray-800 hover:border-gray-600 hover:bg-gray-750 text-gray-300 hover:text-white transition-all duration-200 active:scale-[0.98]"
+          className="py-3.5 rounded-xl text-sm font-semibold border border-gray-700 bg-gray-800 hover:border-gray-600 hover:bg-gray-750 text-gray-300 hover:text-white transition-all duration-200 active:scale-[0.98]"
         >
           {copied ? (
             <span className="flex items-center justify-center gap-2 text-green-400">
@@ -160,36 +338,56 @@ export default function WorkoutResult({
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              <span>📋</span> Copiar Treino
+              <span>📋</span> Copiar
             </span>
           )}
         </button>
 
         <button
-          onClick={onRegenerate}
-          disabled={isLoading}
-          className="flex-1 py-3.5 rounded-xl text-sm font-bold
-            bg-gradient-to-r from-orange-500 to-orange-600
-            hover:from-orange-400 hover:to-orange-500
-            text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
-            transition-all duration-200 active:scale-[0.98]"
+          onClick={handleSavePDF}
+          disabled={savingPDF}
+          className="py-3.5 rounded-xl text-sm font-semibold border border-gray-700 bg-gray-800 hover:border-red-500/40 hover:bg-gray-750 text-gray-300 hover:text-red-400 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? (
+          {savingPDF ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Gerando...
+              Salvando...
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              <span>⚡</span> Gerar Outro
+              <span>📄</span> Salvar PDF
             </span>
           )}
         </button>
       </div>
+
+      <button
+        onClick={onRegenerate}
+        disabled={isLoading}
+        className={`w-full py-3.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 active:scale-[0.98]
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
+          formData.advancedMode
+            ? "bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-violet-500/20 hover:shadow-violet-500/40"
+            : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 shadow-orange-500/20 hover:shadow-orange-500/40"
+        }`}
+      >
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Gerando...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            <span>{formData.advancedMode ? "🚀" : "⚡"}</span> Gerar Outro
+          </span>
+        )}
+      </button>
     </div>
   );
 }
