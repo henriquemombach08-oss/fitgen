@@ -21,10 +21,12 @@ function buildPrompt(data: WorkoutFormData): string {
 
   const advancedInstructions = data.advancedMode
     ? `
-- MODO AVANÇADO ATIVO: inclua pelo menos 2 técnicas avançadas entre os exercícios, como:
-  supersets (indicar na dica), drop sets, rest-pause, tempo controlado (ex: 3-1-2), ou cluster sets.
-- Priorize exercícios compostos e variações avançadas.
-- O campo "dica" deve mencionar a técnica avançada quando aplicável.`
+- MODO AVANÇADO ATIVO:
+  - Use FAIXAS de repetições em vez de números exatos (ex: "8-12", "6-10", "12-20").
+  - Para exercícios de isolamento ou último exercício de cada grupo muscular, use "até a falha" no campo "repeticoes" (ex: "10-15 ou até a falha").
+  - Inclua pelo menos 2 técnicas avançadas: supersets (indicar na dica), drop sets, rest-pause, tempo controlado (ex: 3-1-2), ou cluster sets.
+  - Priorize exercícios compostos e variações avançadas.
+  - O campo "dica" deve mencionar a técnica avançada e, quando aplicável, orientar sobre execução até a falha com segurança.`
     : "";
 
   return `Você é um personal trainer especialista. Crie um treino personalizado com base nos seguintes parâmetros:
