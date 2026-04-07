@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { WorkoutFormData, Workout } from "@/types/workout";
 
-const client = new OpenAI({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: "https://api.x.ai/v1",
-});
-
 function buildPrompt(data: WorkoutFormData): string {
   return `Você é um personal trainer especialista. Crie um treino personalizado com base nos seguintes parâmetros:
 
@@ -57,6 +52,11 @@ Regras:
 }
 
 export async function POST(request: NextRequest) {
+  const client = new OpenAI({
+    apiKey: process.env.XAI_API_KEY,
+    baseURL: "https://api.x.ai/v1",
+  });
+
   try {
     const body: WorkoutFormData = await request.json();
 
