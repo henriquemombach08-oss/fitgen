@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase";
+import { getSupabaseServer } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
+  const supabaseServer = getSupabaseServer();
   try {
     const body = await request.json();
     const { workout, formData } = body;
