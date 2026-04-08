@@ -77,7 +77,7 @@ function getMacroTargets(
 }
 
 // ─── Prompt builder ───────────────────────────────────────────────────────────
-function buildNutritionPrompt(data: NutritionRequest, tdee: number, targetCals: number, macros: { protein: number; fat: number; carbs: number }): string {
+function buildNutritionPrompt(data: NutritionRequest, tdee: number, targetCals: number, macros: { protein: number; fat: number; carbs: number }, trainingTime?: string): string {
   const { bodyData, level, goals, equipment } = data;
   const isAdvanced = ["Avançado", "Atleta / Competidor"].includes(level);
   const isCompetitor = level === "Atleta / Competidor";
@@ -138,6 +138,37 @@ CALORIE CYCLING (Renaissance Periodization):
 ${advancedNutritionContext}
 ${competitorContext}
 ${powerliftingContext}
+
+HORÁRIO DO TREINO: ${trainingTime ?? "Não informado"}
+
+TIMING DAS REFEIÇÕES baseado no horário:
+${trainingTime === "Manhã (6h–9h)" ? `
+• Pré-treino: 05h00-05h30 — refeição leve (banana + whey ou aveia rápida)
+• Pós-treino: 08h00-09h00 — refeição principal do dia (café da manhã robusto: ovos + carbos)
+• Almoço: 12h00-13h00 — refeição completa
+• Lanche: 15h00-16h00
+• Jantar: 19h00-20h00` :
+trainingTime === "Meio-dia (11h–13h)" ? `
+• Café da manhã: 07h00-08h00 — refeição moderada
+• Pré-treino: 10h00-10h30 — lanche pré-treino (fruta + proteína)
+• Pós-treino: 13h00-14h00 — almoço como refeição pós-treino
+• Lanche: 16h00-17h00
+• Jantar: 19h30-20h30` :
+trainingTime === "Tarde (15h–17h)" ? `
+• Café da manhã: 07h00-08h00
+• Almoço: 12h00-13h00 — refeição rica em carbos para energia no treino
+• Pré-treino: 13h30-14h00 — lanche pré-treino (carbo simples + proteína)
+• Pós-treino: 17h00-18h00 — refeição pós-treino (proteína + carbo)
+• Jantar: 20h00-21h00 — refeição moderada` :
+trainingTime === "Noite (18h–21h)" ? `
+• Café da manhã: 07h00-08h00
+• Almoço: 12h00-13h00 — maior refeição do dia
+• Lanche da tarde: 15h00-16h00 — pré-treino (carbos + proteína 2-3h antes)
+• Pós-treino: 20h00-21h00 — proteína + carbo moderado
+• Ceia: 22h00 — proteína de lenta digestão (caseína/queijo cottage) se necessário` :
+`• Distribuir 4-5 refeições ao longo do dia de forma equidistante
+• Pré-treino: 60-90min antes do treino — carbo + proteína
+• Pós-treino: até 2h após — proteína + carbo`}
 
 INSTRUÇÕES:
 1. Gere um plano com ${isCompetitor ? "5-6" : isAdvanced ? "4-5" : "3-4"} refeições por dia
@@ -201,7 +232,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: NutritionRequest = await request.json();
-    const { bodyData, level, goals } = body;
+    const { bodyData, level, goals, equipment, trainingTime } = body;
 
     if (!bodyData?.weight || !bodyData?.height || !bodyData?.age || !bodyData?.sex || !level || !goals?.length) {
       return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
@@ -212,7 +243,7 @@ export async function POST(request: NextRequest) {
     const targetCals = tdee + adjustment;
     const macros = getMacroTargets(bodyData, goals, level, targetCals);
 
-    const prompt = buildNutritionPrompt(body, tdee, targetCals, macros);
+    const prompt = buildNutritionPrompt(body, tdee, targetCals, macros, trainingTime);
 
     const completion = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",

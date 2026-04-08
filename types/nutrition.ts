@@ -63,9 +63,49 @@ export interface NutritionRequest {
   level: string;
   goals: string[];
   equipment: string;
+  trainingTime?: TrainingTime;
 }
 
 export interface NutritionResponse {
   plan?: NutritionPlan;
   error?: string;
+}
+
+export type TrainingTime =
+  | "Manhã (6h–9h)"
+  | "Meio-dia (11h–13h)"
+  | "Tarde (15h–17h)"
+  | "Noite (18h–21h)"
+  | "Horário variável";
+
+export interface WeekNutrition {
+  semana: number;
+  nome: string;           // "Semana de Acumulação", "Semana de Intensificação"
+  foco: string;           // descrição do foco nutricional desta semana
+  calorias_treino: number;
+  calorias_descanso: number;
+  proteina: number;       // g/dia
+  carboidratos: number;   // g/dia
+  gordura: number;        // g/dia
+  ajuste_percentual: number; // % em relação à semana base (+5%, -10%, etc)
+  refeed: boolean;
+  deload: boolean;
+  observacao: string;
+}
+
+export interface MonthlyNutritionPlan {
+  nome: string;
+  descricao: string;
+  semanas: WeekNutrition[];
+  progressao_calorica: string;  // descrição da progressão ao longo do mês
+  dica_mensal: string;
+  fonte: string;
+}
+
+export interface MonthlyNutritionRequest {
+  bodyData: BodyData;
+  level: string;
+  goals: string[];
+  basePlan: NutritionPlan;      // plano base já gerado
+  trainingTime?: TrainingTime;
 }
