@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface ExerciseGifProps {
   enName: string;
@@ -8,19 +8,21 @@ interface ExerciseGifProps {
 
 export default function ExerciseGif({ enName }: ExerciseGifProps) {
   const [open, setOpen] = useState(false);
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [frameIndex, setFrameIndex] = useState(0);
   const [notFound, setNotFound] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function handleOpen() {
     setOpen(true);
-    if (gifUrl || notFound) return;
+    if (images.length > 0 || notFound) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/exercise-gif?name=${encodeURIComponent(enName)}`);
       const data = await res.json();
-      if (data.gifUrl) {
-        setGifUrl(data.gifUrl);
+      if (data.images?.length > 0) {
+        setImages(data.images);
       } else {
         setNotFound(true);
       }
@@ -30,6 +32,17 @@ export default function ExerciseGif({ enName }: ExerciseGifProps) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (open && images.length > 1) {
+      intervalRef.current = setInterval(() => {
+        setFrameIndex((i) => (i + 1) % images.length);
+      }, 800);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [open, images]);
 
   if (!open) {
     return (
@@ -72,15 +85,28 @@ export default function ExerciseGif({ enName }: ExerciseGifProps) {
           </p>
         )}
 
-        {!loading && gifUrl && (
+        {!loading && images.length > 0 && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={gifUrl}
+            src={images[frameIndex]}
             alt={enName}
             className="max-h-48 w-auto rounded-lg object-contain"
           />
         )}
       </div>
+
+      {images.length > 1 && (
+        <div className="flex justify-center gap-1 pb-2">
+          {images.map((_, i) => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                i === frameIndex ? "bg-orange-400" : "bg-gray-600"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

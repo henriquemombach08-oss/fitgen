@@ -2,80 +2,77 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-interface ExerciseDBResult {
+const EXERCISES_URL =
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
+const IMAGES_BASE =
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/images";
+
+interface FreeExercise {
   id: string;
   name: string;
-  gifUrl?: string;
+  images: string[];
 }
 
-function searchTerms(name: string): string[] {
-  const lower = name.toLowerCase().trim();
-  const terms: string[] = [lower];
+let cachedExercises: FreeExercise[] | null = null;
+let cacheTime = 0;
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
-  const stripped = lower
-    .replace(/^(barbell|dumbbell|cable|machine|ez-?bar|smith machine|resistance band)\s+/i, "")
-    .trim();
-  if (stripped !== lower) terms.push(stripped);
-
-  const words = lower.split(/\s+/);
-  if (words.length > 2) terms.push(words.slice(0, 2).join(" "));
-  if (words.length > 1) terms.push(words[0]);
-
-  return [...new Set(terms)];
+async function getExercises(): Promise<FreeExercise[]> {
+  if (cachedExercises && Date.now() - cacheTime < CACHE_TTL) {
+    return cachedExercises;
+  }
+  const res = await fetch(EXERCISES_URL);
+  if (!res.ok) return [];
+  const data: FreeExercise[] = await res.json();
+  cachedExercises = data;
+  cacheTime = Date.now();
+  return data;
 }
 
-async function fetchWithKey(url: string, apiKey: string) {
-  return fetch(url, {
-    headers: {
-      "X-RapidAPI-Key": apiKey,
-      "X-RapidAPI-Host": "exercisedb.p.rapidapi.com",
-    },
-  });
+function normalize(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+}
+
+function scoreMatch(query: string, candidate: string): number {
+  const q = normalize(query);
+  const c = normalize(candidate);
+  if (c === q) return 100;
+  const qWords = q.split(/\s+/);
+  const cWords = c.split(/\s+/);
+  const hits = qWords.filter((w) => cWords.includes(w)).length;
+  const startBonus = c.startsWith(q) ? 20 : 0;
+  return (hits / qWords.length) * 60 + startBonus;
+}
+
+function findBestMatch(name: string, exercises: FreeExercise[]): FreeExercise | null {
+  if (!exercises.length) return null;
+  let best: FreeExercise | null = null;
+  let bestScore = 0;
+  for (const ex of exercises) {
+    const score = scoreMatch(name, ex.name);
+    if (score > bestScore) {
+      bestScore = score;
+      best = ex;
+    }
+  }
+  return bestScore >= 20 ? best : null;
 }
 
 export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get("name");
-  if (!name) return NextResponse.json({ gifUrl: null });
+  if (!name) return NextResponse.json({ images: [] });
 
-  const apiKey = process.env.RAPIDAPI_KEY;
-  if (!apiKey) return NextResponse.json({ gifUrl: null });
+  try {
+    const exercises = await getExercises();
+    const match = findBestMatch(name, exercises);
+    if (!match || !match.images.length) return NextResponse.json({ images: [] });
 
-  for (const term of searchTerms(name)) {
-    try {
-      const res = await fetchWithKey(
-        `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(term)}?limit=3&offset=0`,
-        apiKey
-      );
-      if (!res.ok) continue;
+    const images = match.images
+      .slice(0, 2)
+      .map((img) => `${IMAGES_BASE}/${img}`);
 
-      const data: ExerciseDBResult[] = await res.json();
-      if (!Array.isArray(data) || data.length === 0) continue;
-
-      const exercise = data[0];
-
-      // gifUrl present in response (v1 / some v2 plans)
-      if (exercise.gifUrl) {
-        return NextResponse.json({ gifUrl: exercise.gifUrl });
-      }
-
-      // v2.2: gifUrl removed from list endpoint — fetch by ID to get it
-      const detail = await fetchWithKey(
-        `https://exercisedb.p.rapidapi.com/exercises/exercise/${exercise.id}`,
-        apiKey
-      );
-      if (detail.ok) {
-        const ex: ExerciseDBResult = await detail.json();
-        if (ex.gifUrl) return NextResponse.json({ gifUrl: ex.gifUrl });
-      }
-
-      // Last resort: construct URL from known CDN pattern
-      return NextResponse.json({
-        gifUrl: `https://v2.exercisedb.io/image/${exercise.id}`,
-      });
-    } catch {
-      continue;
-    }
+    return NextResponse.json({ images });
+  } catch {
+    return NextResponse.json({ images: [] });
   }
-
-  return NextResponse.json({ gifUrl: null });
 }
