@@ -508,6 +508,8 @@ export default function WorkoutResult({
                   {/* Set Logger */}
                   <SetLogger
                     totalSets={ex.series}
+                    targetReps={ex.repeticoes}
+                    descanso={ex.descanso}
                     logs={setLogs[index] ?? []}
                     onUpdate={(setIndex, field, value) =>
                       updateLog(index, setIndex, field, value)

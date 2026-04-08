@@ -5,11 +5,19 @@ import { SetLog } from "@/types/workout";
 
 interface SetLoggerProps {
   totalSets: number;
+  targetReps: string;
+  descanso: string;
   logs: SetLog[];
   onUpdate: (setIndex: number, field: keyof SetLog, value: string) => void;
 }
 
-export default function SetLogger({ totalSets, logs, onUpdate }: SetLoggerProps) {
+export default function SetLogger({
+  totalSets,
+  targetReps,
+  descanso,
+  logs,
+  onUpdate,
+}: SetLoggerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const filledCount = logs.filter((l) => l.weight || l.reps).length;
@@ -51,14 +59,20 @@ export default function SetLogger({ totalSets, logs, onUpdate }: SetLoggerProps)
         </span>
       </button>
 
-      {/* Expanded log rows */}
+      {/* Expanded */}
       {isOpen && (
         <div className="mt-2.5 space-y-2">
-          {filledCount === 0 && (
-            <p className="text-xs text-gray-600 italic mb-2">
-              💡 Recomendado: registre peso e reps para acompanhar sua evolução
-            </p>
-          )}
+          {/* Prescription reference bar */}
+          <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg bg-gray-800/50 border border-gray-700/60">
+            <span className="text-gray-500 text-xs">Meta:</span>
+            <span className="text-orange-300/80 text-xs font-semibold">
+              {totalSets}× {targetReps} reps
+            </span>
+            <span className="text-gray-700">·</span>
+            <span className="text-gray-500 text-xs">⏸ {descanso} descanso</span>
+          </div>
+
+          {/* Set rows */}
           {Array.from({ length: totalSets }, (_, i) => (
             <div key={i} className="flex items-center gap-1.5">
               {/* Set number */}
@@ -96,6 +110,12 @@ export default function SetLogger({ totalSets, logs, onUpdate }: SetLoggerProps)
               />
             </div>
           ))}
+
+          {filledCount === 0 && (
+            <p className="text-xs text-gray-700 italic pt-0.5">
+              💡 Recomendado: registre peso e reps para acompanhar sua evolução
+            </p>
+          )}
         </div>
       )}
     </div>
