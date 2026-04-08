@@ -5,6 +5,22 @@ import { SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import FavoriteButton from "@/components/FavoriteButton";
 
+function SpinnerIcon() {
+  return (
+    <svg
+      className="animate-spin"
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+    >
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+    </svg>
+  );
+}
+
 interface WorkoutHistoryProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,6 +49,7 @@ export default function WorkoutHistory({
   onLoad,
 }: WorkoutHistoryProps) {
   const {
+    history,
     getHistory,
     toggleFavorite,
     deleteWorkout,
@@ -45,6 +62,7 @@ export default function WorkoutHistory({
   } = useWorkoutHistory();
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   // Reset tab and pagination limit when panel opens
   useEffect(() => {
@@ -72,6 +90,100 @@ export default function WorkoutHistory({
     : allEntries.length;
 
   const favCount = allEntries.filter((e) => e.isFavorite).length;
+
+  function handleExportCSV() {
+    const rows: string[][] = [
+      ["Data", "Título", "Nível", "Equipamento", "Duração", "Objetivos", "Grupos Musculares", "Favorito"],
+      ...history.map((w) => [
+        new Date(w.createdAt).toLocaleDateString("pt-BR"),
+        w.workout.nome ?? "",
+        w.formData.level,
+        w.formData.equipment,
+        w.formData.duration,
+        w.formData.goals.join("; "),
+        w.formData.muscleGroups.join("; "),
+        w.isFavorite ? "Sim" : "Não",
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `FitGen_Historico_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleExportPDF() {
+    setExportingPDF(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const W = doc.internal.pageSize.getWidth();
+      const m = 20;
+      let y = m;
+
+      // Header bar
+      doc.setFillColor(249, 115, 22);
+      doc.rect(0, 0, W, 14, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("FitGen — Histórico de Treinos", m, 10);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text(new Date().toLocaleDateString("pt-BR"), W - m, 10, { align: "right" });
+      y = 24;
+
+      // Stats row
+      doc.setTextColor(80, 80, 80);
+      doc.setFontSize(8);
+      doc.text(
+        `Total: ${history.length} treinos  ·  Favoritos: ${history.filter((w) => w.isFavorite).length}`,
+        m,
+        y
+      );
+      y += 10;
+
+      // Each workout as a row
+      history.forEach((w, i) => {
+        if (y > 265) {
+          doc.addPage();
+          y = m;
+        }
+        const shade = i % 2 === 0 ? 250 : 245;
+        doc.setFillColor(shade, shade, shade);
+        doc.rect(m, y - 4, W - m * 2, 14, "F");
+
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 20, 20);
+        doc.text(w.workout.nome ?? w.formData.muscleGroups.join(", "), m + 2, y + 2);
+
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          `${new Date(w.createdAt).toLocaleDateString("pt-BR")}  ·  ${w.formData.level}  ·  ${w.formData.duration}  ·  ${w.formData.goals.join(", ")}`,
+          m + 2,
+          y + 7
+        );
+
+        if (w.isFavorite) {
+          doc.setFillColor(249, 115, 22);
+          doc.circle(W - m - 3, y + 3, 1.5, "F");
+        }
+        y += 16;
+      });
+
+      doc.save(`FitGen_Historico_${new Date().toISOString().split("T")[0]}.pdf`);
+    } finally {
+      setExportingPDF(false);
+    }
+  }
 
   function handleDelete(id: string) {
     if (confirmDeleteId === id) {
@@ -182,6 +294,62 @@ export default function WorkoutHistory({
             )}
           </button>
         </div>
+
+        {/* Export buttons row */}
+        {allEntries.length > 0 && (
+          <div
+            className="flex gap-2 px-4 py-2.5 shrink-0"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <span className="text-xs mr-auto" style={{ color: "#52525b" }}>
+              {allEntries.length} treino{allEntries.length > 1 ? "s" : ""}
+            </span>
+            <button
+              onClick={handleExportCSV}
+              className="px-3 py-1.5 rounded-lg text-xs transition-all duration-150"
+              style={{
+                background: "#141414",
+                border: "1px solid rgba(255,255,255,0.06)",
+                color: "#a1a1aa",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#f97316";
+                e.currentTarget.style.color = "#f97316";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = "#a1a1aa";
+              }}
+            >
+              CSV
+            </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              className="px-3 py-1.5 rounded-lg text-xs transition-all duration-150 flex items-center gap-1.5"
+              style={{
+                background: "#141414",
+                border: "1px solid rgba(255,255,255,0.06)",
+                color: "#a1a1aa",
+                opacity: exportingPDF ? 0.6 : 1,
+                cursor: exportingPDF ? "not-allowed" : "pointer",
+              }}
+              onMouseEnter={(e) => {
+                if (!exportingPDF) {
+                  e.currentTarget.style.borderColor = "#f97316";
+                  e.currentTarget.style.color = "#f97316";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = "#a1a1aa";
+              }}
+            >
+              {exportingPDF ? <SpinnerIcon /> : null}
+              PDF
+            </button>
+          </div>
+        )}
 
         {/* List */}
         <div

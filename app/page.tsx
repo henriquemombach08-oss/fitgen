@@ -14,6 +14,9 @@ import PhotoAnalysis from "@/components/PhotoAnalysis";
 import Onboarding from "@/components/Onboarding";
 import BodyTracker from "@/components/BodyTracker";
 import UserProfile from "@/components/UserProfile";
+import OneRMCalculator from "@/components/OneRMCalculator";
+import MuscleRecoveryMap from "@/components/MuscleRecoveryMap";
+import SupplementTracker from "@/components/SupplementTracker";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -147,6 +150,9 @@ export default function Home() {
               </button>
 
               <ProgressStats />
+              <MuscleRecoveryMap />
+              <OneRMCalculator />
+              <SupplementTracker />
               <PhotoAnalysis
                 userLevel={lastFormData?.level}
                 exerciseNames={workout?.exercicios?.map(e => e.nome)}

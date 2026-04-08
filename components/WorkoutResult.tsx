@@ -242,6 +242,11 @@ export default function WorkoutResult({
   const [copied, setCopied] = useState(false);
   const [savingPDF, setSavingPDF] = useState(false);
 
+  // ── State: AI workout feedback
+  const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
   // ── State: Modo Treino
   const [workoutModeOpen, setWorkoutModeOpen] = useState(false);
 
@@ -357,6 +362,33 @@ export default function WorkoutResult({
       // silently ignore
     } finally {
       setReplacingIndex(null);
+    }
+  }
+
+  // ─── Handler: AI workout feedback ───────────────────────────────────────
+  async function handleGetFeedback() {
+    setFeedbackLoading(true);
+    setFeedbackOpen(true);
+    try {
+      const res = await fetch("/api/workout-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workout: currentWorkout,
+          logs: setLogs,
+          formData,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.feedback) {
+        setFeedbackText(json.feedback);
+      } else {
+        setFeedbackText("Não foi possível gerar a análise. Tente novamente.");
+      }
+    } catch {
+      setFeedbackText("Erro ao conectar com o servidor. Tente novamente.");
+    } finally {
+      setFeedbackLoading(false);
     }
   }
 
@@ -582,6 +614,82 @@ export default function WorkoutResult({
           </button>
           <ShareButton workout={currentWorkout} formData={formData} />
         </div>
+
+        {/* ── Análise do Treino ────────────────────────────────────────────── */}
+        {(() => {
+          const hasLogs = Object.values(setLogs).some((arr) => arr.length > 0);
+          return (
+            <div className="space-y-2">
+              <button
+                onClick={hasLogs ? handleGetFeedback : undefined}
+                disabled={feedbackLoading}
+                className="w-full px-4 py-2.5 rounded-xl text-xs font-medium transition-all disabled:opacity-40"
+                style={{
+                  background: '#141414',
+                  border: hasLogs ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(255,255,255,0.04)',
+                  color: hasLogs ? '#a1a1aa' : '#52525b',
+                  cursor: hasLogs ? 'pointer' : 'default',
+                }}
+                onMouseEnter={(e) => {
+                  if (hasLogs) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.20)';
+                    (e.currentTarget as HTMLButtonElement).style.color = '#f97316';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (hasLogs) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                    (e.currentTarget as HTMLButtonElement).style.color = '#a1a1aa';
+                  }
+                }}
+              >
+                {feedbackLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Analisando...
+                  </span>
+                ) : "Análise do Treino"}
+              </button>
+
+              {feedbackOpen && (
+                <div
+                  className="rounded-xl p-4"
+                  style={{ background: '#0f0f0f', border: '1px solid rgba(249,115,22,0.15)' }}
+                >
+                  <p className="text-xs font-medium tracking-wide uppercase mb-3" style={{ color: '#f97316' }}>
+                    Análise do Treino
+                  </p>
+                  {feedbackLoading ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" style={{ color: '#f97316' }} viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span className="text-sm" style={{ color: '#52525b' }}>Gerando análise...</span>
+                    </div>
+                  ) : feedbackText ? (
+                    <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>
+                      {feedbackText}
+                    </p>
+                  ) : (
+                    <p className="text-sm leading-relaxed" style={{ color: '#52525b' }}>
+                      Complete o treino registrando suas séries para receber uma análise personalizada.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!hasLogs && !feedbackOpen && (
+                <p className="text-xs text-center" style={{ color: '#3f3f46' }}>
+                  Complete o treino registrando suas séries para receber uma análise personalizada.
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Gerar outro ───────────────────────────────────────────────── */}
         <button
