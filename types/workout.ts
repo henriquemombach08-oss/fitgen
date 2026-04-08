@@ -75,3 +75,10 @@ export interface SetLog {
   reps: string;
   note: string;
 }
+
+export interface WorkoutReportData {
+  resumo: string;
+  destaques: string[];
+  melhorias: string[];
+  dica_principal: string;
+}

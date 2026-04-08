@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { Workout, WorkoutFormData, SetLog } from "@/types/workout";
+import { Workout, WorkoutFormData, SetLog, WorkoutReportData } from "@/types/workout";
 
 type WorkoutLogs = Record<number, SetLog[]>;
-
-export interface WorkoutReportData {
-  resumo: string;
-  destaques: string[];
-  melhorias: string[];
-  dica_principal: string;
-}
 
 function buildReportPrompt(
   workout: Workout,

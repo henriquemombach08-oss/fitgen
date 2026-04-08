@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Workout, WorkoutFormData, SetLog } from "@/types/workout";
-import { WorkoutReportData } from "@/app/api/workout-report/route";
+import { Workout, WorkoutFormData, SetLog, WorkoutReportData } from "@/types/workout";
 
 type WorkoutLogs = Record<number, SetLog[]>;
 
