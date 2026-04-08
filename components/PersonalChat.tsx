@@ -55,14 +55,14 @@ export default function PersonalChat({ userProfile }: Props) {
       const reply = data.reply ?? "Desculpe, não consegui processar sua mensagem.";
 
       setMessages((prev) =>
-        [...prev, { role: "assistant", content: reply }].slice(-20)
+        [...prev, { role: "assistant" as const, content: reply }].slice(-20)
       );
     } catch {
       setMessages((prev) =>
         [
           ...prev,
           {
-            role: "assistant",
+            role: "assistant" as const,
             content: "Erro de conexão. Tente novamente.",
           },
         ].slice(-20)

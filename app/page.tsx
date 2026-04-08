@@ -50,7 +50,7 @@ export default function Home() {
       setAppState("result");
 
       // Salvar automaticamente no histórico após gerar
-      const saved = saveWorkout(generatedWorkout, data);
+      const saved = await saveWorkout(generatedWorkout, data);
       setCurrentSaved(saved);
     } catch {
       setErrorMsg("Falha na conexão. Verifique sua internet e tente novamente.");
