@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 interface Message {
   role: "user" | "assistant";
@@ -29,6 +30,13 @@ function loadMessages(): Message[] {
   return [WELCOME_MESSAGE];
 }
 
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
 export default function PersonalChat({ userProfile }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
@@ -37,16 +45,42 @@ export default function PersonalChat({ userProfile }: Props) {
   const [trashHover, setTrashHover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  const userId = useRef<string | null>(null);
 
-  // Load from localStorage on mount
+  // Load messages on mount: from Supabase if authenticated, else localStorage
   useEffect(() => {
-    setMessages(loadMessages());
-    initialized.current = true;
+    async function init() {
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        userId.current = user.id;
+        const { data: rows } = await supabase
+          .from("chat_messages")
+          .select("role, content")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true })
+          .limit(60);
+
+        if (rows && rows.length > 0) {
+          setMessages(rows as Message[]);
+        } else {
+          setMessages([WELCOME_MESSAGE]);
+        }
+      } else {
+        setMessages(loadMessages());
+      }
+
+      initialized.current = true;
+    }
+
+    init();
   }, []);
 
-  // Persist to localStorage on every messages change (skip before init)
+  // Persist to localStorage on every messages change (skip before init, skip for authenticated users)
   useEffect(() => {
     if (!initialized.current) return;
+    if (userId.current) return; // authenticated: Supabase is source of truth
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
     } catch {
@@ -60,7 +94,23 @@ export default function PersonalChat({ userProfile }: Props) {
     }
   }, [messages, open, loading]);
 
-  function handleClear() {
+  function persistMessage(role: "user" | "assistant", content: string) {
+    if (!userId.current) return;
+    const supabase = getSupabase();
+    supabase
+      .from("chat_messages")
+      .insert({ user_id: userId.current, role, content })
+      .then(() => {}); // fire-and-forget
+  }
+
+  async function handleClear() {
+    if (userId.current) {
+      const supabase = getSupabase();
+      await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("user_id", userId.current);
+    }
     setMessages([]);
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -72,6 +122,7 @@ export default function PersonalChat({ userProfile }: Props) {
     const userMessage: Message = { role: "user", content: trimmed };
     const updatedMessages = [...messages, userMessage].slice(-20);
 
+    persistMessage("user", trimmed);
     setMessages(updatedMessages);
     setInput("");
     setLoading(true);
@@ -89,16 +140,19 @@ export default function PersonalChat({ userProfile }: Props) {
       const data = await res.json();
       const reply = data.reply ?? "Desculpe, não consegui processar sua mensagem.";
 
+      persistMessage("assistant", reply);
       setMessages((prev) =>
         [...prev, { role: "assistant" as const, content: reply }].slice(-20)
       );
     } catch {
+      const errorMsg = "Erro de conexão. Tente novamente.";
+      persistMessage("assistant", errorMsg);
       setMessages((prev) =>
         [
           ...prev,
           {
             role: "assistant" as const,
-            content: "Erro de conexão. Tente novamente.",
+            content: errorMsg,
           },
         ].slice(-20)
       );

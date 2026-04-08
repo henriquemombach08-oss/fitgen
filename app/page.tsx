@@ -12,6 +12,8 @@ import NutritionPanel from "@/components/NutritionPanel";
 import ProgressStats from "@/components/ProgressStats";
 import PhotoAnalysis from "@/components/PhotoAnalysis";
 import Onboarding from "@/components/Onboarding";
+import BodyTracker from "@/components/BodyTracker";
+import UserProfile from "@/components/UserProfile";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -151,6 +153,8 @@ export default function Home() {
               />
               <NutritionPanel userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals, equipment: lastFormData.equipment } : undefined} />
               <WeeklyPlanCard userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals.map(String), equipment: lastFormData.equipment } : undefined} />
+              <BodyTracker />
+              <UserProfile />
               <AuthButton />
             </div>
           </div>

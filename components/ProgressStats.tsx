@@ -22,6 +22,31 @@ function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+function calcStreak(history: SavedWorkout[]): number {
+  if (!history.length) return 0;
+  const days = [
+    ...new Set(history.map((w) => new Date(w.createdAt).toDateString())),
+  ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  let streak = 0;
+  const expected = new Date();
+  expected.setHours(0, 0, 0, 0);
+  let expectedTime = expected.getTime();
+
+  for (const day of days) {
+    const d = new Date(day);
+    d.setHours(0, 0, 0, 0);
+    const diff = (expectedTime - d.getTime()) / 86400000;
+    if (diff <= 1) {
+      streak++;
+      expectedTime = d.getTime();
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ProgressStats() {
@@ -69,7 +94,10 @@ export default function ProgressStats() {
     // Recent 5 workouts
     const recent = history.slice(0, 5);
 
-    return { total, thisWeek, topMuscle, top5Muscles, maxMuscleCount, heatmapDays, recent };
+    // Streak
+    const streak = calcStreak(history);
+
+    return { total, thisWeek, topMuscle, top5Muscles, maxMuscleCount, heatmapDays, recent, streak };
   }, [history]);
 
   const isEmpty = !loading && history.length === 0;
@@ -183,13 +211,24 @@ export default function ProgressStats() {
               ) : (
                 <>
                   {/* ── 1. Summary cards ─────────────────────────────────── */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: "0.75rem",
+                    }}
+                  >
                     <SummaryCard label="Total de treinos" value={String(stats.total)} />
                     <SummaryCard label="Esta semana" value={String(stats.thisWeek)} />
                     <SummaryCard
                       label="Grupo favorito"
                       value={stats.topMuscle ?? "—"}
                       small={Boolean(stats.topMuscle && stats.topMuscle.length > 8)}
+                    />
+                    <SummaryCard
+                      label="Sequência"
+                      value={`${stats.streak} ${stats.streak === 1 ? "dia" : "dias"}`}
+                      accentValue={stats.streak >= 3}
                     />
                   </div>
 
@@ -270,7 +309,25 @@ export default function ProgressStats() {
                     </div>
                   )}
 
-                  {/* ── 4. Recent workouts ───────────────────────────────── */}
+                  {/* ── 4. Exercise progression ──────────────────────────── */}
+                  <div>
+                    <p
+                      className="text-xs font-medium uppercase tracking-wider mb-3"
+                      style={{ color: "#52525b" }}
+                    >
+                      Progressão de Cargas
+                    </p>
+                    <div
+                      className="rounded-xl p-4"
+                      style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.06)" }}
+                    >
+                      <p className="text-xs leading-relaxed" style={{ color: "#52525b" }}>
+                        Registre séries durante o treino para ver a progressão.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ── 5. Recent workouts ───────────────────────────────── */}
                   {stats.recent.length > 0 && (
                     <div>
                       <p
@@ -333,10 +390,12 @@ function SummaryCard({
   label,
   value,
   small = false,
+  accentValue = false,
 }: {
   label: string;
   value: string;
   small?: boolean;
+  accentValue?: boolean;
 }) {
   return (
     <div
@@ -345,7 +404,7 @@ function SummaryCard({
     >
       <p
         className={`font-black leading-tight ${small ? "text-sm" : "text-xl"}`}
-        style={{ color: "#fafafa" }}
+        style={{ color: accentValue ? "#f97316" : "#fafafa" }}
       >
         {value}
       </p>
