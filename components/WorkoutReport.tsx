@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Workout, WorkoutFormData, SetLog, WorkoutReportData } from "@/types/workout";
 
 type WorkoutLogs = Record<number, SetLog[]>;
+type ExercisePhotos = Record<number, string[]>;
 
 interface WorkoutReportProps {
   workout: Workout;
   formData: WorkoutFormData;
   logs: WorkoutLogs;
+  exercisePhotos: ExercisePhotos;
 }
 
 function countFilledSets(logs: WorkoutLogs): number {
@@ -17,13 +19,23 @@ function countFilledSets(logs: WorkoutLogs): number {
     .filter((s) => s.weight || s.reps).length;
 }
 
-export default function WorkoutReport({ workout, formData, logs }: WorkoutReportProps) {
+function countPhotos(photos: ExercisePhotos): number {
+  return Object.values(photos).flat().length;
+}
+
+export default function WorkoutReport({ workout, formData, logs, exercisePhotos }: WorkoutReportProps) {
   const [report, setReport] = useState<WorkoutReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [photoAnalysis, setPhotoAnalysis] = useState<string | null>(null);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+
   const filledSets = countFilledSets(logs);
   const hasData = filledSets > 0;
+  const totalPhotos = countPhotos(exercisePhotos);
+  const hasPhotos = totalPhotos > 0;
 
   async function handleGenerate() {
     setLoading(true);
@@ -44,6 +56,32 @@ export default function WorkoutReport({ workout, formData, logs }: WorkoutReport
       setError("Falha na conexão. Tente novamente.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAnalyzePhotos() {
+    setLoadingPhotos(true);
+    setPhotoError("");
+    try {
+      const entries = workout.exercicios
+        .map((ex, i) => ({ exerciseName: ex.nome, photos: exercisePhotos[i] ?? [] }))
+        .filter((e) => e.photos.length > 0);
+
+      const res = await fetch("/api/photo-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries, level: formData.level }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setPhotoError(json.error ?? "Erro ao analisar fotos.");
+        return;
+      }
+      setPhotoAnalysis(json.analysis);
+    } catch {
+      setPhotoError("Falha na conexão. Tente novamente.");
+    } finally {
+      setLoadingPhotos(false);
     }
   }
 
@@ -158,6 +196,71 @@ export default function WorkoutReport({ workout, formData, logs }: WorkoutReport
             </p>
             <p className="text-sm text-gray-300 leading-relaxed">{report.dica_principal}</p>
           </div>
+        </div>
+      )}
+
+      {/* ── Análise de fotos ─────────────────────────────────────────────── */}
+      {hasPhotos && (
+        <div className="border-t border-gray-800">
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                Análise Visual
+              </p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {totalPhotos} foto{totalPhotos > 1 ? "s" : ""} — IA avalia sua execução
+              </p>
+            </div>
+
+            {!photoAnalysis && (
+              <button
+                onClick={handleAnalyzePhotos}
+                disabled={loadingPhotos}
+                className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                  bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
+                  text-white shadow-lg shadow-blue-500/20"
+              >
+                {loadingPhotos ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Analisando...
+                  </>
+                ) : (
+                  <><span>📸</span> Analisar fotos</>
+                )}
+              </button>
+            )}
+
+            {photoAnalysis && (
+              <button
+                onClick={() => { setPhotoAnalysis(null); setPhotoError(""); }}
+                className="shrink-0 text-xs text-gray-600 hover:text-gray-400 transition-colors"
+              >
+                Reanalisar
+              </button>
+            )}
+          </div>
+
+          {photoError && (
+            <div className="mx-4 mb-4 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
+              <p className="text-xs text-red-400">{photoError}</p>
+            </div>
+          )}
+
+          {photoAnalysis && (
+            <div className="px-4 pb-4 border-t border-gray-800 pt-4">
+              <p className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">
+                🔍 Avaliação da execução
+              </p>
+              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                {photoAnalysis}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

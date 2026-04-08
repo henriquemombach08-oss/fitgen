@@ -257,6 +257,24 @@ export default function WorkoutResult({
   const workoutKey = savedWorkout?.id ?? workout.nome;
   const { logs: setLogs, addLog, clearExerciseLogs } = useSetLogs(workoutKey);
 
+  // ── Exercise photos (in-memory per exercise index)
+  const [exercisePhotos, setExercisePhotos] = useState<Record<number, string[]>>({});
+
+  function handleAddPhoto(exerciseIndex: number, dataUrl: string) {
+    setExercisePhotos((prev) => ({
+      ...prev,
+      [exerciseIndex]: [...(prev[exerciseIndex] ?? []), dataUrl],
+    }));
+  }
+
+  function handleRemovePhoto(exerciseIndex: number, photoIndex: number) {
+    setExercisePhotos((prev) => {
+      const photos = [...(prev[exerciseIndex] ?? [])];
+      photos.splice(photoIndex, 1);
+      return { ...prev, [exerciseIndex]: photos };
+    });
+  }
+
   // ─── Handlers: copy & PDF ────────────────────────────────────────────────
   async function handleCopy() {
     const text = workoutToText(currentWorkout, formData);
@@ -513,8 +531,11 @@ export default function WorkoutResult({
                     targetReps={ex.repeticoes}
                     descanso={ex.descanso}
                     logs={setLogs[index] ?? []}
+                    photos={exercisePhotos[index] ?? []}
                     onAdd={(log) => addLog(index, log)}
                     onClear={() => clearExerciseLogs(index)}
+                    onAddPhoto={(url) => handleAddPhoto(index, url)}
+                    onRemovePhoto={(i) => handleRemovePhoto(index, i)}
                     onStartTimer={(setNumber) => handleStartTimer(index, setNumber)}
                   />
                 </div>
@@ -546,6 +567,7 @@ export default function WorkoutResult({
           workout={currentWorkout}
           formData={formData}
           logs={setLogs}
+          exercisePhotos={exercisePhotos}
         />
 
         {/* ── Ações: grid 3 colunas (Agente 2 expandiu de 2→3) ──────────── */}

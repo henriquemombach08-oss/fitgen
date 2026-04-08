@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { SetLog } from "@/types/workout";
+import { compressImage } from "@/utils/compressImage";
 
 type Status = "idle" | "active" | "done";
 
@@ -11,9 +12,12 @@ interface ExerciseTrackerProps {
   targetReps: string;
   descanso: string;
   logs: SetLog[];
+  photos: string[];
   onAdd: (log: SetLog) => void;
   onClear: () => void;
   onStartTimer: (setNumber: number) => void;
+  onAddPhoto: (dataUrl: string) => void;
+  onRemovePhoto: (index: number) => void;
 }
 
 export default function ExerciseTracker({
@@ -22,9 +26,12 @@ export default function ExerciseTracker({
   targetReps,
   descanso,
   logs,
+  photos,
   onAdd,
   onClear,
   onStartTimer,
+  onAddPhoto,
+  onRemovePhoto,
 }: ExerciseTrackerProps) {
   const [status, setStatus] = useState<Status>(() =>
     logs.length > 0 ? "done" : "idle"
@@ -32,6 +39,67 @@ export default function ExerciseTracker({
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const weightRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  async function handlePhotoCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const compressed = await compressImage(reader.result as string);
+      onAddPhoto(compressed);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so the same file can be selected again
+    e.target.value = "";
+  }
+
+  function PhotoSection() {
+    return (
+      <div className="space-y-2">
+        {/* Hidden camera input */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handlePhotoCapture}
+        />
+
+        {/* Thumbnails */}
+        {photos.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {photos.map((src, i) => (
+              <div key={i} className="relative group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`Foto ${i + 1}`}
+                  className="w-16 h-16 object-cover rounded-lg border border-gray-700"
+                />
+                <button
+                  onClick={() => onRemovePhoto(i)}
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add photo button */}
+        <button
+          onClick={() => cameraRef.current?.click()}
+          className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-orange-400 transition-colors"
+        >
+          <span>📷</span>
+          <span>{photos.length === 0 ? "Fotografar execução" : "Adicionar foto"}</span>
+        </button>
+      </div>
+    );
+  }
 
   // Focus weight field when entering active state
   useEffect(() => {
@@ -182,13 +250,15 @@ export default function ExerciseTracker({
             Finalizar exercício sem mais séries
           </button>
         )}
+
+        <PhotoSection />
       </div>
     );
   }
 
   // ── DONE ──────────────────────────────────────────────────────────────────
   return (
-    <div className="mt-3 pt-3 border-t border-gray-800/60">
+    <div className="mt-3 pt-3 border-t border-gray-800/60 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 space-y-1.5">
           <p className="text-xs font-semibold text-green-400">
@@ -223,6 +293,7 @@ export default function ExerciseTracker({
           </button>
         </div>
       </div>
+      <PhotoSection />
     </div>
   );
 }
