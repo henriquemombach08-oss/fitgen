@@ -55,9 +55,11 @@ export function useWorkoutHistory() {
   const saveWorkout = useCallback(
     async (workout: Workout, formData: WorkoutFormData): Promise<SavedWorkout> => {
       const supabase = getClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
       const { data, error } = await supabase
         .from("workout_history")
-        .insert({ workout, form_data: formData, logs: {} })
+        .insert({ user_id: user.id, workout, form_data: formData, logs: {} })
         .select("*")
         .single();
       if (error || !data) throw new Error(error?.message ?? "Erro ao salvar treino");

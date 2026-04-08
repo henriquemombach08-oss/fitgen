@@ -49,9 +49,13 @@ export default function Home() {
       setWorkout(generatedWorkout);
       setAppState("result");
 
-      // Salvar automaticamente no histórico após gerar
-      const saved = await saveWorkout(generatedWorkout, data);
-      setCurrentSaved(saved);
+      // Salvar automaticamente no histórico após gerar (falha silenciosa)
+      try {
+        const saved = await saveWorkout(generatedWorkout, data);
+        setCurrentSaved(saved);
+      } catch {
+        // não bloqueia exibição do treino
+      }
     } catch {
       setErrorMsg("Falha na conexão. Verifique sua internet e tente novamente.");
       setAppState("error");
