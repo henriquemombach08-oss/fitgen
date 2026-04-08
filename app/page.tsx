@@ -32,6 +32,7 @@ export default function Home() {
   const { saveWorkout, toggleFavorite } = useWorkoutHistory();
   const [currentSaved, setCurrentSaved] = useState<SavedWorkout | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
 
   async function generateWorkout(data: WorkoutFormData) {
     setAppState("loading");
@@ -135,11 +136,11 @@ export default function Home() {
 
             {/* Nav buttons */}
             <div className="flex items-center gap-2">
+              {/* Primary: Histórico */}
               <button
                 onClick={() => setIsHistoryOpen(true)}
-                aria-label="Histórico"
-                title="Histórico de treinos"
-                className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 text-sm font-medium"
+                aria-label="Histórico" title="Histórico de treinos"
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150"
                 style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#a1a1aa' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = '#f97316'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = '#a1a1aa'; }}
@@ -149,18 +150,57 @@ export default function Home() {
                 </svg>
               </button>
 
-              <ProgressStats />
-              <MuscleRecoveryMap />
-              <OneRMCalculator />
-              <SupplementTracker />
-              <PhotoAnalysis
-                userLevel={lastFormData?.level}
-                exerciseNames={workout?.exercicios?.map(e => e.nome)}
-              />
+              {/* Primary: Nutrição */}
               <NutritionPanel userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals, equipment: lastFormData.equipment } : undefined} />
+
+              {/* Primary: Plano semanal */}
               <WeeklyPlanCard userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals.map(String), equipment: lastFormData.equipment } : undefined} />
-              <BodyTracker />
-              <UserProfile />
+
+              {/* Overflow: Ferramentas */}
+              <div className="relative">
+                <button
+                  onClick={() => setToolsMenuOpen(v => !v)}
+                  aria-label="Ferramentas" title="Ferramentas"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150"
+                  style={{ background: toolsMenuOpen ? 'rgba(249,115,22,0.10)' : '#141414', border: toolsMenuOpen ? '1px solid rgba(249,115,22,0.30)' : '1px solid rgba(255,255,255,0.06)', color: toolsMenuOpen ? '#f97316' : '#a1a1aa' }}
+                  onMouseEnter={e => { if (!toolsMenuOpen) { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = '#f97316'; } }}
+                  onMouseLeave={e => { if (!toolsMenuOpen) { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = '#a1a1aa'; } }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+                  </svg>
+                </button>
+
+                {toolsMenuOpen && (
+                  <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-40" onClick={() => setToolsMenuOpen(false)} />
+                    {/* Dropdown panel */}
+                    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl p-3"
+                      style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.08)', minWidth: '204px', boxShadow: '0 16px 40px rgba(0,0,0,0.6)' }}>
+                      <p className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: '#52525b' }}>Ferramentas</p>
+                      {/* Grid 4 columns — each cell: button + label */}
+                      <div className="grid grid-cols-4 gap-1" onClick={() => setToolsMenuOpen(false)}>
+                        {[
+                          { label: "Progresso",   node: <ProgressStats /> },
+                          { label: "Recuperação", node: <MuscleRecoveryMap /> },
+                          { label: "1RM",         node: <OneRMCalculator /> },
+                          { label: "Análise",     node: <PhotoAnalysis userLevel={lastFormData?.level} exerciseNames={workout?.exercicios?.map(e => e.nome)} /> },
+                          { label: "Medidas",     node: <BodyTracker /> },
+                          { label: "Suplementos", node: <SupplementTracker /> },
+                          { label: "Perfil",      node: <UserProfile /> },
+                        ].map(({ label, node }) => (
+                          <div key={label} className="flex flex-col items-center gap-1">
+                            {node}
+                            <span style={{ color: '#52525b', fontSize: '9px', lineHeight: 1 }}>{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <AuthButton />
             </div>
           </div>
