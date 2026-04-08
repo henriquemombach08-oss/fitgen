@@ -16,14 +16,16 @@ interface WorkoutFormProps {
 }
 
 const basicMuscleGroups: MuscleGroup[] = [
-  "Peito", "Costas", "Pernas", "Ombros", "Braços", "Full Body",
+  "Full Body",
+  "Peito", "Costas", "Ombros",
+  "Bíceps", "Tríceps", "Braços",
+  "Quadríceps", "Posterior", "Pernas",
   "Glúteos", "Core / Abdômen",
 ];
 const advancedMuscleGroups: MuscleGroup[] = [
   ...basicMuscleGroups,
-  "Panturrilha",
+  "Panturrilha", "Trapézio", "Lombar", "Antebraço", "Pescoço",
   "Push (Peito + Ombro + Tríceps)", "Pull (Costas + Bíceps)", "Upper Body",
-  "Trapézio", "Lombar", "Antebraço", "Pescoço",
 ];
 
 const basicEquipments: Equipment[] = [
@@ -42,11 +44,15 @@ const basicGoals: Goal[] = ["Hipertrofia", "Força", "Resistência", "Emagrecime
 const advancedGoals: Goal[] = [...basicGoals, "Potência"];
 
 const muscleIcons: Record<MuscleGroup, string> = {
-  Peito: "🫁", Costas: "🔙", Pernas: "🦵", Ombros: "💪", Braços: "💪",
-  "Full Body": "⚡", Glúteos: "🍑", "Core / Abdômen": "🎯",
-  Panturrilha: "🦶", "Push (Peito + Ombro + Tríceps)": "🚀",
-  "Pull (Costas + Bíceps)": "🧲", "Upper Body": "🏆",
-  Trapézio: "🏔️", Lombar: "↙️", Antebraço: "💪", Pescoço: "🦒",
+  "Full Body": "⚡",
+  Peito: "🫁", Costas: "🔙", Ombros: "🔝",
+  Bíceps: "💪", Tríceps: "💪", Braços: "🦾",
+  Quadríceps: "🦵", Posterior: "🦵", Pernas: "🦵",
+  Glúteos: "🍑", "Core / Abdômen": "🎯",
+  Panturrilha: "🦶", Trapézio: "🏔️", Lombar: "↙️", Antebraço: "💪", Pescoço: "🦒",
+  "Push (Peito + Ombro + Tríceps)": "🚀",
+  "Pull (Costas + Bíceps)": "🧲",
+  "Upper Body": "🏆",
 };
 
 const goalIcons: Record<Goal, string> = {

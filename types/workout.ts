@@ -4,17 +4,21 @@ export type MuscleGroup =
   | "Pernas"
   | "Ombros"
   | "Braços"
+  | "Bíceps"
+  | "Tríceps"
+  | "Quadríceps"
+  | "Posterior"
   | "Full Body"
   | "Glúteos"
   | "Core / Abdômen"
   | "Panturrilha"
-  | "Push (Peito + Ombro + Tríceps)"
-  | "Pull (Costas + Bíceps)"
-  | "Upper Body"
   | "Trapézio"
   | "Lombar"
   | "Antebraço"
-  | "Pescoço";
+  | "Pescoço"
+  | "Push (Peito + Ombro + Tríceps)"
+  | "Pull (Costas + Bíceps)"
+  | "Upper Body";
 
 export type Equipment =
   | "Academia completa"
