@@ -32,16 +32,23 @@ const basicEquipments: Equipment[] = [
   "Academia completa", "Halteres", "Barra + anilhas", "Sem equipamento",
 ];
 const advancedEquipments: Equipment[] = [
-  ...basicEquipments, "Cabo / Polia", "Máquinas", "Kettlebell",
+  ...basicEquipments, "Cabo / Polia", "Máquinas", "Kettlebell", "Elásticos / Bandas",
 ];
 
 const basicDurations: Duration[] = ["30 min", "45 min", "60 min", "90 min"];
 const advancedDurations: Duration[] = [...basicDurations, "120 min"];
 
-const levels: Level[] = ["Iniciante", "Intermediário", "Avançado"];
+const basicLevels: Level[] = ["Iniciante", "Intermediário", "Avançado"];
+const advancedLevels: Level[] = [...basicLevels, "Atleta / Competidor"];
 
 const basicGoals: Goal[] = ["Hipertrofia", "Força", "Resistência", "Emagrecimento"];
-const advancedGoals: Goal[] = [...basicGoals, "Potência"];
+const advancedGoals: Goal[] = [
+  ...basicGoals,
+  "Potência",
+  "Recomposição Corporal",
+  "Contest Prep / Definição",
+  "Powerlifting",
+];
 
 const muscleIcons: Record<MuscleGroup, string> = {
   "Full Body": "⚡",
@@ -56,8 +63,14 @@ const muscleIcons: Record<MuscleGroup, string> = {
 };
 
 const goalIcons: Record<Goal, string> = {
-  Hipertrofia: "📈", Força: "🏋️", Resistência: "🏃",
-  Emagrecimento: "🔥", Potência: "⚡",
+  Hipertrofia: "📈",
+  Força: "🏋️",
+  Resistência: "🏃",
+  Emagrecimento: "🔥",
+  Potência: "⚡",
+  "Recomposição Corporal": "⚖️",
+  "Contest Prep / Definição": "🏆",
+  Powerlifting: "🥇",
 };
 
 function SingleSelectGroup<T extends string>({
@@ -193,6 +206,7 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
       const basicEqs = basicEquipments as readonly string[];
       const basicDurs = basicDurations as readonly string[];
       const basicGs = basicGoals as readonly string[];
+      const basicLvls = basicLevels as readonly string[];
       return {
         ...f,
         advancedMode: next,
@@ -203,6 +217,7 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
           : f.muscleGroups,
         equipment: !next && !basicEqs.includes(f.equipment) ? "Academia completa" : f.equipment,
         duration: !next && !basicDurs.includes(f.duration) ? "60 min" : f.duration,
+        level: !next && !basicLvls.includes(f.level) ? "Avançado" : f.level,
         goals: !next
           ? f.goals.filter((g) => basicGs.includes(g)).length > 0
             ? f.goals.filter((g) => basicGs.includes(g))
@@ -220,6 +235,7 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
   const muscleGroupOptions = form.advancedMode ? advancedMuscleGroups : basicMuscleGroups;
   const equipmentOptions = form.advancedMode ? advancedEquipments : basicEquipments;
   const durationOptions = form.advancedMode ? advancedDurations : basicDurations;
+  const levelOptions = form.advancedMode ? advancedLevels : basicLevels;
   const goalOptions = form.advancedMode ? advancedGoals : basicGoals;
 
   return (
@@ -290,9 +306,11 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
 
       <SingleSelectGroup
         label="Nível"
-        options={levels}
+        options={levelOptions}
         value={form.level}
         onChange={(v) => setForm((f) => ({ ...f, level: v }))}
+        advanced={form.advancedMode}
+        basicCount={basicLevels.length}
       />
 
       <MultiSelectGroup
@@ -307,9 +325,9 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
 
       {form.advancedMode && (
         <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3">
-          <p className="text-xs text-violet-400 font-semibold mb-1">⚡ Modo Avançado</p>
+          <p className="text-xs text-violet-400 font-semibold mb-1">⚡ Modo Avançado Ativo</p>
           <p className="text-xs text-gray-400 leading-relaxed">
-            Treino com 8–12 exercícios, técnicas de supersets, drop sets e periodização avançada.
+            Desbloqueia nível <span className="text-violet-300">Atleta / Competidor</span>, objetivos de <span className="text-violet-300">Powerlifting</span> e <span className="text-violet-300">Contest Prep</span>, e técnicas como drop sets, myo-reps e cluster sets.
           </p>
         </div>
       )}

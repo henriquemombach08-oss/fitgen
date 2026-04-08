@@ -27,18 +27,22 @@ export type Equipment =
   | "Sem equipamento"
   | "Cabo / Polia"
   | "Máquinas"
-  | "Kettlebell";
+  | "Kettlebell"
+  | "Elásticos / Bandas";
 
 export type Duration = "30 min" | "45 min" | "60 min" | "90 min" | "120 min";
 
-export type Level = "Iniciante" | "Intermediário" | "Avançado";
+export type Level = "Iniciante" | "Intermediário" | "Avançado" | "Atleta / Competidor";
 
 export type Goal =
   | "Hipertrofia"
   | "Força"
   | "Resistência"
   | "Emagrecimento"
-  | "Potência";
+  | "Potência"
+  | "Recomposição Corporal"
+  | "Contest Prep / Definição"
+  | "Powerlifting";
 
 export interface WorkoutFormData {
   muscleGroups: MuscleGroup[];
