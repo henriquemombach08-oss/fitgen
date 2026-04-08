@@ -6,6 +6,7 @@ import WorkoutResult from "@/components/WorkoutResult";
 import WorkoutHistory from "@/components/WorkoutHistory";
 import LoadingState from "@/components/LoadingState";
 import AuthButton from "@/components/AuthButton";
+import PersonalChat from "@/components/PersonalChat";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -224,6 +225,7 @@ export default function Home() {
           </p>
         </main>
       </div>
+      <PersonalChat userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals.map(String) } : undefined} />
     </div>
   );
 }
