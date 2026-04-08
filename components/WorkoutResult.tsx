@@ -8,6 +8,7 @@ import WorkoutRating from "@/components/WorkoutRating";
 import RestTimer from "@/components/RestTimer";
 import DifficultyAdjuster from "@/components/DifficultyAdjuster";
 import SetLogger from "@/components/SetLogger";
+import WorkoutReport from "@/components/WorkoutReport";
 import { parseRestTime } from "@/utils/parseRestTime";
 import { useSetLogs } from "@/hooks/useSetLogs";
 
@@ -535,6 +536,13 @@ export default function WorkoutResult({
           </p>
           <WorkoutRating workoutNome={currentWorkout.nome} />
         </div>
+
+        {/* ── Relatório de desempenho com IA ──────────────────────────────── */}
+        <WorkoutReport
+          workout={currentWorkout}
+          formData={formData}
+          logs={setLogs}
+        />
 
         {/* ── Ações: grid 3 colunas (Agente 2 expandiu de 2→3) ──────────── */}
         <div className="grid grid-cols-3 gap-3">
