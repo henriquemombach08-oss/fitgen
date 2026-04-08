@@ -69,3 +69,9 @@ export interface SavedWorkout {
   createdAt: string;
   isFavorite: boolean;
 }
+
+export interface SetLog {
+  weight: string;
+  reps: string;
+  note: string;
+}

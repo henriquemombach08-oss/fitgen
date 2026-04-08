@@ -7,7 +7,9 @@ import FavoriteButton from "@/components/FavoriteButton";
 import WorkoutRating from "@/components/WorkoutRating";
 import RestTimer from "@/components/RestTimer";
 import DifficultyAdjuster from "@/components/DifficultyAdjuster";
+import SetLogger from "@/components/SetLogger";
 import { parseRestTime } from "@/utils/parseRestTime";
+import { useSetLogs } from "@/hooks/useSetLogs";
 
 interface WorkoutResultProps {
   workout: Workout;
@@ -248,6 +250,13 @@ export default function WorkoutResult({
 
   // ── State: Agente 3 — rest timer
   const [timerState, setTimerState] = useState<TimerState | null>(null);
+
+  // ── Set logs (localStorage, keyed by workout id or nome)
+  const workoutKey = savedWorkout?.id ?? workout.nome;
+  const { logs: setLogs, updateLog } = useSetLogs(
+    workoutKey,
+    workout.exercicios.map((e) => e.series)
+  );
 
   // ─── Handlers: copy & PDF ────────────────────────────────────────────────
   async function handleCopy() {
@@ -494,6 +503,15 @@ export default function WorkoutResult({
                   <p className="mt-2.5 text-gray-500 text-xs leading-relaxed border-l-2 border-gray-700 pl-2.5 group-hover:border-orange-500/30 group-hover:text-gray-400 transition-all">
                     💡 {ex.dica}
                   </p>
+
+                  {/* Set Logger */}
+                  <SetLogger
+                    totalSets={ex.series}
+                    logs={setLogs[index] ?? []}
+                    onUpdate={(setIndex, field, value) =>
+                      updateLog(index, setIndex, field, value)
+                    }
+                  />
                 </div>
               </div>
             </div>
