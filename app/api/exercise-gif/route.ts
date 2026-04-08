@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 
 const EXERCISES_URL =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
+const IMAGES_BASE =
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises";
 
 interface FreeExercise {
   id: string;
@@ -36,8 +38,11 @@ function scoreMatch(query: string, candidate: string): number {
   const qWords = q.split(/\s+/);
   const cWords = c.split(/\s+/);
   const hits = qWords.filter((w) => cWords.includes(w)).length;
-  const startBonus = c.startsWith(q) ? 20 : 0;
-  return (hits / qWords.length) * 60 + startBonus;
+  if (hits === 0) return 0;
+  // Reward coverage of query words, penalize extra candidate words
+  const queryCoverage = hits / qWords.length;
+  const candidatePrecision = hits / cWords.length;
+  return queryCoverage * 50 + candidatePrecision * 50;
 }
 
 function findBestMatch(name: string, exercises: FreeExercise[]): FreeExercise | null {
@@ -48,31 +53,24 @@ function findBestMatch(name: string, exercises: FreeExercise[]): FreeExercise | 
     const score = scoreMatch(name, ex.name);
     if (score > bestScore) { bestScore = score; best = ex; }
   }
-  return bestScore >= 20 ? best : null;
+  return bestScore >= 25 ? best : null;
 }
 
 export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get("name");
-  if (!name) return NextResponse.json({ images: [], debug: "no name" });
+  if (!name) return NextResponse.json({ images: [] });
 
   try {
     const exercises = await getExercises();
     const match = findBestMatch(name, exercises);
-    if (!match || !match.images.length) {
-      return NextResponse.json({ images: [], debug: { match: match?.name, rawImages: match?.images } });
-    }
+    if (!match || !match.images.length) return NextResponse.json({ images: [] });
 
-    // Return raw paths + both possible base URLs for debugging
-    return NextResponse.json({
-      images: [],
-      debug: {
-        matchedName: match.name,
-        rawImages: match.images,
-        urlOption1: match.images.map(img => `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/images/${img}`),
-        urlOption2: match.images.map(img => `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${img}`),
-      }
-    });
-  } catch (e) {
-    return NextResponse.json({ images: [], debug: { error: String(e) } });
+    const images = match.images
+      .slice(0, 2)
+      .map((img) => `${IMAGES_BASE}/${img}`);
+
+    return NextResponse.json({ images });
+  } catch {
+    return NextResponse.json({ images: [] });
   }
 }
