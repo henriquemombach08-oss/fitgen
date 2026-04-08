@@ -77,12 +77,36 @@ function MacroCard({ label, macros, isTraining }: { label: string; macros: { cal
   );
 }
 
+type NutritionGoal =
+  | "Hipertrofia"
+  | "Força"
+  | "Emagrecimento"
+  | "Recomposição Corporal"
+  | "Resistência"
+  | "Potência"
+  | "Contest Prep / Definição"
+  | "Powerlifting";
+
+const nutritionGoalOptions: { value: NutritionGoal; icon: string; desc: string }[] = [
+  { value: "Hipertrofia",              icon: "📈", desc: "Ganhar massa muscular" },
+  { value: "Força",                    icon: "🏋️", desc: "Aumentar força máxima" },
+  { value: "Emagrecimento",            icon: "🔥", desc: "Perder gordura corporal" },
+  { value: "Recomposição Corporal",    icon: "⚖️", desc: "Ganhar músculo e perder gordura" },
+  { value: "Resistência",              icon: "🏃", desc: "Melhorar performance aeróbica" },
+  { value: "Potência",                 icon: "⚡", desc: "Explosão e velocidade" },
+  { value: "Contest Prep / Definição", icon: "🏆", desc: "Preparação para competição" },
+  { value: "Powerlifting",             icon: "🥇", desc: "Squat, Bench, Deadlift máximos" },
+];
+
 export default function NutritionPanel({ userProfile }: Props) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "loading" | "result">("form");
   const [plan, setPlan] = useState<NutritionPlan | null>(null);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"macros" | "refeicoes" | "suplementos" | "periodizacao">("macros");
+  const [nutritionGoal, setNutritionGoal] = useState<NutritionGoal>(
+    (userProfile?.goals?.[0] as NutritionGoal) ?? "Hipertrofia"
+  );
 
   const [body, setBody] = useState<BodyData>({
     weight: 80,
@@ -111,7 +135,7 @@ export default function NutritionPanel({ userProfile }: Props) {
         body: JSON.stringify({
           bodyData: body,
           level: userProfile?.level ?? "Intermediário",
-          goals: userProfile?.goals ?? ["Hipertrofia"],
+          goals: [nutritionGoal],
           equipment: userProfile?.equipment ?? "Academia completa",
         }),
       });
@@ -173,7 +197,7 @@ export default function NutritionPanel({ userProfile }: Props) {
                 <h2 className="text-white font-bold text-base">🥗 Plano Nutricional</h2>
                 <p className="text-gray-500 text-xs">
                   {step === "result" && plan
-                    ? `TDEE: ${plan.tdee} kcal · Meta: ${plan.meta_calorica} kcal`
+                    ? `${nutritionGoal} · TDEE: ${plan.tdee} kcal · Meta: ${plan.meta_calorica} kcal`
                     : "Baseado em RP + Eric Helms + Layne Norton"}
                 </p>
               </div>
@@ -184,14 +208,33 @@ export default function NutritionPanel({ userProfile }: Props) {
               {/* ── FORM ── */}
               {step === "form" && (
                 <div className="p-5 space-y-5">
-                  {userProfile && (
-                    <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-3">
-                      <p className="text-xs text-orange-400 font-semibold">Perfil de treino detectado</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {userProfile.level} · {userProfile.goals.join(", ")}
-                      </p>
+                  {/* Objetivo nutricional */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Qual é o seu objetivo?</label>
+                    <div className="space-y-2">
+                      {nutritionGoalOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setNutritionGoal(opt.value)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                            nutritionGoal === opt.value
+                              ? "bg-green-500/10 border-green-500/40 text-white"
+                              : "bg-gray-800/60 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300"
+                          }`}
+                        >
+                          <span className="text-base">{opt.icon}</span>
+                          <div>
+                            <p className="text-sm font-semibold leading-none">{opt.value}</p>
+                            <p className="text-xs mt-0.5 opacity-60">{opt.desc}</p>
+                          </div>
+                          {nutritionGoal === opt.value && (
+                            <span className="ml-auto text-green-400 text-sm">✓</span>
+                          )}
+                        </button>
+                      ))}
                     </div>
-                  )}
+                  </div>
 
                   {/* Sexo */}
                   <div className="space-y-2">
