@@ -386,121 +386,94 @@ export default function WorkoutResult({
         />
       )}
 
-      <div className="space-y-6 animate-slide-up">
+      <div className="space-y-5 animate-slide-up">
         {/* ── Header do treino ──────────────────────────────────────────── */}
-        <div className="relative rounded-2xl overflow-hidden border border-orange-500/30 bg-gradient-to-br from-orange-500/10 via-gray-900 to-gray-900 p-6">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -translate-y-16 translate-x-16" />
-          <div className="relative">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-orange-400 text-xs font-semibold uppercase tracking-widest">
-                    Treino Gerado
-                  </p>
-                  {formData.advancedMode && (
-                    <span className="bg-violet-600/20 border border-violet-500/30 text-violet-300 text-xs font-bold px-2 py-0.5 rounded-md">
-                      ⚡ AVANÇADO
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-2xl font-black text-white leading-tight">
-                  {currentWorkout.nome}
-                </h2>
-              </div>
-
-              {/* Right side: duration badge + Modo Treino + Favorite + History buttons */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="bg-orange-500/20 border border-orange-500/40 text-orange-300 text-sm font-semibold px-3 py-1.5 rounded-lg">
-                  ⏱ {currentWorkout.duracao_estimada}
+        <div className="rounded-2xl p-5" style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs font-medium tracking-wide" style={{ color: '#f97316' }}>
+                  {currentWorkout.duracao_estimada}
                 </span>
+                {formData.advancedMode && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.10)', border: '1px solid rgba(139,92,246,0.20)', color: '#a78bfa' }}>
+                    Avançado
+                  </span>
+                )}
+              </div>
+              <h2 className="text-xl font-bold leading-tight" style={{ color: '#fafafa' }}>
+                {currentWorkout.nome}
+              </h2>
+            </div>
 
-                {/* Modo Treino button */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setWorkoutModeOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.20)', color: '#f97316' }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Iniciar
+              </button>
+              {savedWorkout && onToggleFavorite && (
+                <FavoriteButton workoutId={savedWorkout.id} isFavorite={savedWorkout.isFavorite} onToggle={onToggleFavorite} />
+              )}
+              {onOpenHistory && (
                 <button
-                  onClick={() => setWorkoutModeOpen(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 transition-colors"
+                  onClick={onOpenHistory}
+                  aria-label="Histórico"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+                  style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#52525b' }}
                 >
-                  🏋️ Modo Treino
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
                 </button>
-
-                {/* Agente 1 — FavoriteButton */}
-                {savedWorkout && onToggleFavorite && (
-                  <FavoriteButton
-                    workoutId={savedWorkout.id}
-                    isFavorite={savedWorkout.isFavorite}
-                    onToggle={onToggleFavorite}
-                  />
-                )}
-
-                {/* Agente 1 — History button */}
-                {onOpenHistory && (
-                  <button
-                    onClick={onOpenHistory}
-                    aria-label="Abrir histórico"
-                    title="Ver histórico de treinos"
-                    className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-700 bg-gray-800 text-gray-400 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-200 active:scale-90 text-base"
-                  >
-                    🕓
-                  </button>
-                )}
-              </div>
+              )}
             </div>
+          </div>
 
-            <p className="mt-3 text-gray-300 text-sm leading-relaxed">
-              {currentWorkout.descricao}
-            </p>
+          <p className="text-sm leading-relaxed mb-4" style={{ color: '#a1a1aa' }}>
+            {currentWorkout.descricao}
+          </p>
 
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {[
-                ...formData.muscleGroups,
-                ...formData.goals,
-                formData.level,
-                formData.equipment,
-              ].map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-gray-800 border border-gray-700 text-gray-400 text-xs px-2.5 py-1 rounded-md"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            {[...formData.muscleGroups, ...formData.goals, formData.level, formData.equipment].map((tag) => (
+              <span key={tag} className="text-xs px-2 py-0.5 rounded-md" style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#52525b' }}>
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
 
-        {/* ── Difficulty Adjuster (Agente 3) ──────────────────────────────── */}
-        <DifficultyAdjuster
-          onAdjust={handleAdjustDifficulty}
-          isLoading={difficultyLoading}
-          currentLevel={difficultyLevel}
-        />
+        {/* ── Difficulty Adjuster ──────────────────────────────────────────── */}
+        <DifficultyAdjuster onAdjust={handleAdjustDifficulty} isLoading={difficultyLoading} currentLevel={difficultyLevel} />
 
         {/* ── Lista de exercícios ──────────────────────────────────────────── */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest px-1">
-            {currentWorkout.exercicios.length} Exercícios
-          </h3>
+        <div className="space-y-2">
+          <p className="text-xs font-medium tracking-wide px-1" style={{ color: '#52525b' }}>
+            {currentWorkout.exercicios.length} exercícios
+          </p>
 
           {currentWorkout.exercicios.map((ex, index) => (
             <div
               key={index}
-              className="group rounded-xl border border-gray-800 bg-gray-900 hover:border-orange-500/30 hover:bg-gray-900/80 transition-all duration-200 p-4"
-              style={{ animationDelay: `${index * 60}ms` }}
+              className="group rounded-xl p-4 transition-all duration-200"
+              style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)' }}
             >
-              <div className="flex items-start gap-4">
-                {/* Number badge */}
-                <div className="shrink-0 w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                  <span className="text-orange-400 text-sm font-bold">
-                    {index + 1}
-                  </span>
+              <div className="flex items-start gap-3">
+                {/* Number */}
+                <div className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: '#141414', color: '#f97316' }}>
+                  {index + 1}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  {/* Exercise name row: gif button + name + replace button */}
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {ex.en_name && <ExerciseGif enName={ex.en_name} />}
-                      <h4 className="text-white font-semibold text-sm leading-snug">
+                      <h4 className="font-semibold text-sm leading-snug" style={{ color: '#fafafa' }}>
                         {ex.nome}
                       </h4>
                     </div>
@@ -508,8 +481,8 @@ export default function WorkoutResult({
                       onClick={() => handleReplaceExercise(index)}
                       disabled={replacingIndex !== null}
                       aria-label={`Substituir ${ex.nome}`}
-                      title="Substituir exercício por alternativa equivalente"
-                      className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-gray-700 bg-gray-800 text-gray-500 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-200 active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+                      className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md transition-all disabled:opacity-30"
+                      style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#52525b' }}
                     >
                       {replacingIndex === index ? (
                         <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
@@ -517,31 +490,38 @@ export default function WorkoutResult({
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                       ) : (
-                        "🔄"
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/>
+                          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                        </svg>
                       )}
                     </button>
                   </div>
 
-                  {/* Stats badges + Timer button (Agente 3) */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <StatBadge icon="🔁" label="Séries" value={`${ex.series}x`} accent />
-                    <StatBadge icon="💪" label="Reps" value={ex.repeticoes} />
-                    {/* Descanso badge doubles as timer trigger */}
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    <span className="text-xs px-2 py-1 rounded-md font-semibold" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.15)', color: '#f97316' }}>
+                      {ex.series} séries
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-md" style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#a1a1aa' }}>
+                      {ex.repeticoes} reps
+                    </span>
                     <button
                       onClick={() => handleStartTimer(index, 1)}
-                      title="Iniciar timer de descanso"
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-800 border border-gray-700 text-gray-400 hover:border-orange-500/40 hover:text-orange-300 transition-all duration-150 active:scale-95"
+                      title="Iniciar timer"
+                      className="text-xs px-2 py-1 rounded-md transition-all flex items-center gap-1"
+                      style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#a1a1aa' }}
                     >
-                      <span>⏸️</span>
-                      <span>{ex.descanso}</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                      {ex.descanso}
                     </button>
                   </div>
 
-                  <p className="mt-2.5 text-gray-500 text-xs leading-relaxed border-l-2 border-gray-700 pl-2.5 group-hover:border-orange-500/30 group-hover:text-gray-400 transition-all">
-                    💡 {ex.dica}
+                  <p className="text-xs leading-relaxed pl-2.5" style={{ borderLeft: '2px solid rgba(255,255,255,0.06)', color: '#52525b' }}>
+                    {ex.dica}
                   </p>
 
-                  {/* Exercise Tracker */}
                   <ExerciseTracker
                     exerciseIndex={index}
                     totalSets={ex.series}
@@ -563,82 +543,52 @@ export default function WorkoutResult({
         </div>
 
         {/* ── Observação final ─────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1.5">
-            📌 Dica do Personal
+        <div className="rounded-xl p-4" style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-xs font-medium tracking-wide mb-2" style={{ color: '#52525b' }}>
+            Nota do Personal
           </p>
-          <p className="text-gray-300 text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed" style={{ color: '#a1a1aa' }}>
             {currentWorkout.observacao_final}
           </p>
         </div>
 
-        {/* ── Avaliação do treino (Agente 3) ──────────────────────────────── */}
-        <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
+        {/* ── Avaliação ──────────────────────────────────────────────────────── */}
+        <div className="rounded-xl p-4" style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p className="text-xs font-medium tracking-wide mb-3" style={{ color: '#52525b' }}>
             Avalie este treino
           </p>
           <WorkoutRating workoutNome={currentWorkout.nome} />
         </div>
 
-        {/* ── Relatório de desempenho com IA ──────────────────────────────── */}
-        <WorkoutReport
-          workout={currentWorkout}
-          formData={formData}
-          logs={setLogs}
-          exercisePhotos={exercisePhotos}
-        />
+        {/* ── Relatório ───────────────────────────────────────────────────── */}
+        <WorkoutReport workout={currentWorkout} formData={formData} logs={setLogs} exercisePhotos={exercisePhotos} />
 
-        {/* ── Ações: grid 3 colunas (Agente 2 expandiu de 2→3) ──────────── */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* ── Ações ───────────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={handleCopy}
-            className="py-3.5 rounded-xl text-sm font-semibold border border-gray-700 bg-gray-800 hover:border-gray-600 hover:bg-gray-750 text-gray-300 hover:text-white transition-all duration-200 active:scale-[0.98]"
+            className="py-3 rounded-xl text-sm font-medium transition-all"
+            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: copied ? '#4ade80' : '#a1a1aa' }}
           >
-            {copied ? (
-              <span className="flex items-center justify-center gap-2 text-green-400">
-                <span>✓</span> Copiado!
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <span>📋</span> Copiar
-              </span>
-            )}
+            {copied ? "Copiado" : "Copiar"}
           </button>
-
           <button
             onClick={handleSavePDF}
             disabled={savingPDF}
-            className="py-3.5 rounded-xl text-sm font-semibold border border-gray-700 bg-gray-800 hover:border-red-500/40 hover:bg-gray-750 text-gray-300 hover:text-red-400 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="py-3 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#a1a1aa' }}
           >
-            {savingPDF ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Salvando...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <span>📄</span> PDF
-              </span>
-            )}
+            {savingPDF ? "..." : "PDF"}
           </button>
-
-          {/* Agente 2 — ShareButton */}
           <ShareButton workout={currentWorkout} formData={formData} />
         </div>
 
-        {/* ── Gerar outro ───────────────────────────────────────────────────── */}
+        {/* ── Gerar outro ───────────────────────────────────────────────── */}
         <button
           onClick={onRegenerate}
           disabled={isLoading}
-          className={`w-full py-3.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 active:scale-[0.98]
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
-            formData.advancedMode
-              ? "bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-violet-500/20 hover:shadow-violet-500/40"
-              : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 shadow-orange-500/20 hover:shadow-orange-500/40"
-          }`}
+          className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
+          style={{ background: formData.advancedMode ? '#7c3aed' : '#f97316' }}
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
@@ -648,11 +598,7 @@ export default function WorkoutResult({
               </svg>
               Gerando...
             </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <span>{formData.advancedMode ? "🚀" : "⚡"}</span> Gerar Outro
-            </span>
-          )}
+          ) : "Gerar outro treino"}
         </button>
       </div>
 

@@ -104,6 +104,110 @@ const goalIcons: Record<Goal, string> = {
   Powerlifting: "🥇",
 };
 
+// Design tokens
+const colors = {
+  bgInput: "#141414",
+  borderDefault: "rgba(255,255,255,0.06)",
+  borderHover: "rgba(255,255,255,0.12)",
+  borderActiveOrange: "rgba(249,115,22,0.30)",
+  borderActiveViolet: "rgba(139,92,246,0.30)",
+  bgActiveOrange: "rgba(249,115,22,0.10)",
+  bgActiveViolet: "rgba(139,92,246,0.10)",
+  textPrimary: "#fafafa",
+  textSecondary: "#a1a1aa",
+  textMuted: "#52525b",
+  accent: "#f97316",
+  accentViolet: "#8b5cf6",
+};
+
+function SelectButton({
+  selected,
+  isAdvOpt,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  isAdvOpt: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const getStyle = (): React.CSSProperties => {
+    if (selected && isAdvOpt) {
+      return {
+        background: colors.bgActiveViolet,
+        borderColor: colors.borderActiveViolet,
+        color: colors.textPrimary,
+      };
+    }
+    if (selected && !isAdvOpt) {
+      return {
+        background: colors.bgActiveOrange,
+        borderColor: colors.borderActiveOrange,
+        color: colors.textPrimary,
+      };
+    }
+    if (hovered) {
+      return {
+        background: colors.bgInput,
+        borderColor: colors.borderHover,
+        color: colors.textPrimary,
+      };
+    }
+    return {
+      background: colors.bgInput,
+      borderColor: colors.borderDefault,
+      color: colors.textSecondary,
+    };
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...getStyle(),
+        borderWidth: "1px",
+        borderStyle: "solid",
+        borderRadius: "8px",
+        padding: "6px 12px",
+        fontSize: "13px",
+        fontWeight: 500,
+        transition: "border-color 0.15s, color 0.15s, background 0.15s",
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        lineHeight: "1.4",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label
+      style={{
+        display: "block",
+        fontSize: "11px",
+        fontWeight: 500,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: colors.textMuted,
+        marginBottom: "8px",
+      }}
+    >
+      {children}
+    </label>
+  );
+}
+
 function SingleSelectGroup<T extends string>({
   label,
   options,
@@ -122,31 +226,21 @@ function SingleSelectGroup<T extends string>({
   basicCount?: number;
 }) {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wider">
-        {label}
-      </label>
-      <div className="flex flex-wrap gap-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <SectionLabel>{label}</SectionLabel>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
         {options.map((opt, idx) => {
           const isAdvOpt = advanced && basicCount !== undefined && idx >= basicCount;
           return (
-            <button
+            <SelectButton
               key={opt}
-              type="button"
+              selected={value === opt}
+              isAdvOpt={!!isAdvOpt}
               onClick={() => onChange(opt)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                value === opt
-                  ? isAdvOpt
-                    ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-500/25"
-                    : "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
-                  : isAdvOpt
-                  ? "bg-gray-800 border-violet-800/50 text-violet-300 hover:border-violet-500/50 hover:text-white"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:border-orange-500/50 hover:text-white"
-              }`}
             >
-              {icons?.[opt] && <span className="mr-1">{icons[opt]}</span>}
+              {icons?.[opt] && <span>{icons[opt]}</span>}
               {opt}
-            </button>
+            </SelectButton>
           );
         })}
       </div>
@@ -187,38 +281,30 @@ function MultiSelectGroup<T extends string>({
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wider">
-          {label}
-        </label>
-        <span className="text-xs text-gray-500">
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <SectionLabel>{label}</SectionLabel>
+        <span style={{ fontSize: "11px", color: colors.textMuted }}>
           {values.length} selecionado{values.length !== 1 ? "s" : ""}
         </span>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
         {options.map((opt, idx) => {
           const selected = values.includes(opt);
           const isAdvOpt = advanced && basicCount !== undefined && idx >= basicCount;
           return (
-            <button
+            <SelectButton
               key={opt}
-              type="button"
+              selected={selected}
+              isAdvOpt={!!isAdvOpt}
               onClick={() => toggle(opt)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                selected
-                  ? isAdvOpt
-                    ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-500/25"
-                    : "bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/25"
-                  : isAdvOpt
-                  ? "bg-gray-800 border-violet-800/50 text-violet-300 hover:border-violet-500/50 hover:text-white"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:border-orange-500/50 hover:text-white"
-              }`}
             >
-              {selected && <span className="mr-1 text-xs">✓</span>}
-              {icons?.[opt] && <span className="mr-1">{icons[opt]}</span>}
+              {selected && (
+                <span style={{ fontSize: "10px", opacity: 0.8 }}>✓</span>
+              )}
+              {icons?.[opt] && <span>{icons[opt]}</span>}
               {opt}
-            </button>
+            </SelectButton>
           );
         })}
       </div>
@@ -276,42 +362,10 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
   const goalOptions = form.advancedMode ? advancedGoals : basicGoals;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
       {/* Toggle Modo Avançado */}
-      <button
-        type="button"
-        onClick={toggleAdvanced}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-300 ${
-          form.advancedMode
-            ? "bg-violet-600/15 border-violet-500/40 text-violet-300 shadow-lg shadow-violet-500/10"
-            : "bg-gray-800/60 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300"
-        }`}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="text-base">{form.advancedMode ? "🔓" : "🔒"}</span>
-          <div className="text-left">
-            <p className="text-sm font-semibold leading-none">
-              {form.advancedMode ? "Modo Avançado Ativo" : "Modo Avançado"}
-            </p>
-            <p className="text-xs mt-0.5 opacity-70">
-              {form.advancedMode
-                ? "Grupos extras, técnicas avançadas e mais"
-                : "Desbloqueie grupos musculares e técnicas extras"}
-            </p>
-          </div>
-        </div>
-        <div
-          className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${
-            form.advancedMode ? "bg-violet-600" : "bg-gray-700"
-          }`}
-        >
-          <div
-            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${
-              form.advancedMode ? "left-5" : "left-0.5"
-            }`}
-          />
-        </div>
-      </button>
+      <AdvancedToggle active={form.advancedMode} onToggle={toggleAdvanced} />
 
       <MultiSelectGroup
         label="Grupo Muscular"
@@ -361,42 +415,147 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
         basicCount={basicGoals.length}
       />
 
+      {/* Linha de status Modo Avançado */}
       {form.advancedMode && (
-        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3">
-          <p className="text-xs text-violet-400 font-semibold mb-1">⚡ Modo Avançado Ativo</p>
-          <p className="text-xs text-gray-400 leading-relaxed">
-            Desbloqueia nível <span className="text-violet-300">Atleta / Competidor</span>, objetivos de <span className="text-violet-300">Powerlifting</span> e <span className="text-violet-300">Contest Prep</span>, e técnicas como drop sets, myo-reps e cluster sets.
-          </p>
-        </div>
+        <p style={{ fontSize: "12px", color: colors.accentViolet, margin: 0, lineHeight: 1.5 }}>
+          Modo Avançado ativo — desbloqueados: Atleta / Competidor, Powerlifting, Contest Prep e técnicas como drop sets e myo-reps.
+        </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className={`w-full py-4 rounded-xl font-bold text-base tracking-wide transition-all duration-200
-          text-white shadow-lg
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
-          active:scale-[0.98] ${
-            form.advancedMode
-              ? "bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 shadow-violet-500/30 hover:shadow-violet-500/50"
-              : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 shadow-orange-500/30 hover:shadow-orange-500/50"
-          }`}
-      >
-        {isLoading ? (
-          <span className="flex items-center justify-center gap-2">
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Gerando treino...
-          </span>
-        ) : (
-          <span className="flex items-center justify-center gap-2">
-            <span>{form.advancedMode ? "🚀" : "⚡"}</span>
-            {form.advancedMode ? "Gerar Treino Avançado" : "Gerar Treino"}
-          </span>
-        )}
-      </button>
+      {/* Botão de submit */}
+      <SubmitButton isLoading={isLoading} advancedMode={form.advancedMode} />
     </form>
+  );
+}
+
+function AdvancedToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
+  const borderColor = active
+    ? colors.borderActiveViolet
+    : hovered
+    ? colors.borderHover
+    : colors.borderDefault;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "10px 14px",
+        borderRadius: "10px",
+        background: colors.bgInput,
+        border: `1px solid ${borderColor}`,
+        transition: "border-color 0.15s",
+        cursor: "pointer",
+        textAlign: "left",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 500,
+            color: active ? colors.accentViolet : colors.textSecondary,
+            lineHeight: 1,
+          }}
+        >
+          Modo Avançado
+        </span>
+        <span style={{ fontSize: "11px", color: colors.textMuted, lineHeight: 1.4 }}>
+          {active
+            ? "Grupos extras, técnicas avançadas e mais"
+            : "Desbloqueie grupos musculares e técnicas extras"}
+        </span>
+      </div>
+
+      {/* Toggle pill */}
+      <div
+        style={{
+          position: "relative",
+          width: "36px",
+          height: "20px",
+          borderRadius: "10px",
+          background: active ? colors.accentViolet : "rgba(255,255,255,0.08)",
+          transition: "background 0.2s",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "3px",
+            left: active ? "19px" : "3px",
+            width: "14px",
+            height: "14px",
+            borderRadius: "50%",
+            background: "#fff",
+            transition: "left 0.2s",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+          }}
+        />
+      </div>
+    </button>
+  );
+}
+
+function SubmitButton({ isLoading, advancedMode }: { isLoading: boolean; advancedMode: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  const bgColor = advancedMode
+    ? hovered ? "#6d28d9" : "#7c3aed"
+    : hovered ? "#ea6c0a" : "#f97316";
+
+  return (
+    <button
+      type="submit"
+      disabled={isLoading}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%",
+        padding: "14px",
+        borderRadius: "10px",
+        background: bgColor,
+        border: "none",
+        color: "#fff",
+        fontSize: "14px",
+        fontWeight: 700,
+        letterSpacing: "0.02em",
+        cursor: isLoading ? "not-allowed" : "pointer",
+        opacity: isLoading ? 0.5 : 1,
+        transition: "background 0.15s, opacity 0.15s, transform 0.1s",
+        transform: hovered && !isLoading ? "scale(0.995)" : "scale(1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+      }}
+    >
+      {isLoading ? (
+        <>
+          <svg
+            style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Gerando treino...
+        </>
+      ) : advancedMode ? (
+        "Gerar Treino Avançado"
+      ) : (
+        "Gerar Treino"
+      )}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </button>
   );
 }

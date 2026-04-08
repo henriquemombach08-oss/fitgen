@@ -55,54 +55,125 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
 
   return (
     <>
+      {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300 transition-colors"
+        className="w-8 h-8 flex items-center justify-center transition-all duration-150"
+        style={{
+          background: "#141414",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: "8px",
+          color: "#a1a1aa",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#fafafa";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.06)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
+        }}
+        aria-label="Plano Semanal"
+        title="Plano Semanal"
       >
-        📅 Plano Semanal
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setOpen(false)}
           />
 
           {/* Modal card */}
-          <div className="relative max-w-lg w-full mx-4 bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl max-h-[85vh] flex flex-col">
+          <div
+            className="relative max-w-lg w-full mx-4 rounded-2xl shadow-2xl max-h-[88vh] flex flex-col"
+            style={{
+              background: "#0f0f0f",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
-              <h2 className="text-base font-bold text-white">
-                📅 Plano Semanal da Semana
+            <div
+              className="flex items-center justify-between px-5 py-4 shrink-0"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <h2 className="text-sm font-semibold" style={{ color: "#fafafa" }}>
+                Plano Semanal
               </h2>
               <button
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+                className="w-7 h-7 flex items-center justify-center text-xs transition-colors"
+                style={{
+                  background: "#141414",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "6px",
+                  color: "#a1a1aa",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#fafafa";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.06)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
+                }}
                 aria-label="Fechar"
               >
-                ✕
+                ×
               </button>
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto px-5 py-4 flex-1">
+            <div
+              className="px-5 py-4 flex-1"
+              style={{ overflowY: "auto", scrollbarWidth: "none" }}
+            >
               {/* Loading */}
               {loading && (
                 <div className="flex items-center justify-center py-16">
-                  <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                  <div
+                    className="w-5 h-5 rounded-full animate-spin"
+                    style={{
+                      border: "2px solid rgba(255,255,255,0.08)",
+                      borderTopColor: "#f97316",
+                    }}
+                  />
                 </div>
               )}
 
               {/* Error */}
               {!loading && error && (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-center mb-4">
-                  <p className="text-red-400 text-sm font-semibold">Algo deu errado</p>
-                  <p className="text-gray-500 text-xs mt-1">{error}</p>
+                <div
+                  className="rounded-xl p-4 text-center mb-4"
+                  style={{
+                    border: "1px solid rgba(239,68,68,0.20)",
+                    background: "rgba(239,68,68,0.05)",
+                  }}
+                >
+                  <p className="text-sm font-semibold" style={{ color: "#f87171" }}>
+                    Algo deu errado
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "#52525b" }}>
+                    {error}
+                  </p>
                   <button
                     onClick={handleReset}
-                    className="mt-3 text-xs text-gray-400 hover:text-gray-300 underline"
+                    className="mt-3 text-xs underline transition-colors"
+                    style={{ color: "#a1a1aa" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#fafafa";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
+                    }}
                   >
                     Tentar novamente
                   </button>
@@ -113,7 +184,7 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
               {!loading && !error && !plan && (
                 <div className="space-y-5">
                   <div>
-                    <p className="text-sm text-gray-400 mb-3">
+                    <p className="text-sm mb-3" style={{ color: "#a1a1aa" }}>
                       Quantos dias por semana você quer treinar?
                     </p>
                     <div className="flex gap-2">
@@ -121,13 +192,22 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
                         <button
                           key={d}
                           onClick={() => setDaysPerWeek(d)}
-                          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                          className="flex-1 py-2 text-sm font-semibold rounded-lg transition-colors"
+                          style={
                             daysPerWeek === d
-                              ? "bg-orange-500 text-white"
-                              : "bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-600 hover:text-gray-300"
-                          }`}
+                              ? {
+                                  background: "rgba(249,115,22,0.12)",
+                                  border: "1px solid rgba(249,115,22,0.30)",
+                                  color: "#f97316",
+                                }
+                              : {
+                                  background: "#141414",
+                                  border: "1px solid rgba(255,255,255,0.06)",
+                                  color: "#a1a1aa",
+                                }
+                          }
                         >
-                          {d}x
+                          {d}
                         </button>
                       ))}
                     </div>
@@ -135,7 +215,8 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
 
                   <button
                     onClick={generatePlan}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl w-full hover:from-orange-400 hover:to-orange-500 transition-all shadow-lg shadow-orange-500/20"
+                    className="w-full py-3 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90 active:opacity-80"
+                    style={{ background: "#f97316" }}
                   >
                     Gerar Plano
                   </button>
@@ -147,8 +228,12 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
                 <div className="space-y-4">
                   {/* Plan name and description */}
                   <div>
-                    <h3 className="text-lg font-bold text-white">{plan.nome}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{plan.descricao}</p>
+                    <h3 className="text-base font-bold" style={{ color: "#fafafa" }}>
+                      {plan.nome}
+                    </h3>
+                    <p className="text-sm mt-1" style={{ color: "#a1a1aa" }}>
+                      {plan.descricao}
+                    </p>
                   </div>
 
                   {/* 7-day list */}
@@ -158,28 +243,42 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
                       return (
                         <div
                           key={i}
-                          className={`rounded-xl border px-4 py-3 ${
+                          className="rounded-xl px-4 py-3"
+                          style={
                             isRest
-                              ? "border-gray-800 bg-gray-800/30"
-                              : "border-orange-500/20 bg-orange-500/5"
-                          }`}
+                              ? {
+                                  background: "#141414",
+                                  border: "1px solid rgba(255,255,255,0.06)",
+                                }
+                              : {
+                                  background: "#141414",
+                                  border: "1px solid rgba(255,255,255,0.06)",
+                                  borderLeft: "2px solid rgba(249,115,22,0.50)",
+                                }
+                          }
                         >
                           <div className="flex items-start justify-between gap-3">
                             {/* Left: day name + badge */}
                             <div className="shrink-0">
                               <p
-                                className={`text-sm font-bold ${
-                                  isRest ? "text-gray-500" : "text-white"
-                                }`}
+                                className="text-sm font-bold"
+                                style={{ color: isRest ? "#52525b" : "#fafafa" }}
                               >
                                 {day.dia}
                               </p>
                               <span
-                                className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block ${
+                                className="text-xs font-medium px-2 py-0.5 rounded mt-1 inline-block"
+                                style={
                                   isRest
-                                    ? "bg-gray-700 text-gray-500"
-                                    : "bg-orange-500/20 text-orange-400"
-                                }`}
+                                    ? {
+                                        background: "#0f0f0f",
+                                        color: "#52525b",
+                                      }
+                                    : {
+                                        background: "rgba(249,115,22,0.08)",
+                                        color: "#f97316",
+                                      }
+                                }
                               >
                                 {day.tipo}
                               </span>
@@ -188,9 +287,8 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
                             {/* Right: foco + muscle tags */}
                             <div className="flex-1 min-w-0">
                               <p
-                                className={`text-sm font-semibold ${
-                                  isRest ? "text-gray-600" : "text-gray-200"
-                                }`}
+                                className="text-sm font-semibold"
+                                style={{ color: isRest ? "#52525b" : "#a1a1aa" }}
                               >
                                 {day.foco}
                               </p>
@@ -199,7 +297,11 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
                                   {day.musculosprincipais.map((m, j) => (
                                     <span
                                       key={j}
-                                      className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-500"
+                                      className="text-xs px-1.5 py-0.5 rounded"
+                                      style={{
+                                        background: "#0f0f0f",
+                                        color: "#52525b",
+                                      }}
                                     >
                                       {m}
                                     </span>
@@ -211,7 +313,7 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
 
                           {/* Observation */}
                           {day.observacao && (
-                            <p className="text-xs text-gray-600 mt-2">
+                            <p className="text-xs mt-2" style={{ color: "#52525b" }}>
                               {day.observacao}
                             </p>
                           )}
@@ -222,18 +324,33 @@ export default function WeeklyPlanCard({ userProfile }: WeeklyPlanCardProps) {
 
                   {/* General tip */}
                   {plan.dica_geral && (
-                    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl px-4 py-3">
-                      <p className="text-xs font-semibold text-violet-400 mb-1">
-                        💡 Dica Geral
+                    <div
+                      className="rounded-xl px-4 py-3"
+                      style={{
+                        background: "rgba(249,115,22,0.05)",
+                        border: "1px solid rgba(249,115,22,0.15)",
+                      }}
+                    >
+                      <p className="text-xs font-semibold mb-1" style={{ color: "#f97316" }}>
+                        Dica Geral
                       </p>
-                      <p className="text-sm text-violet-300/80">{plan.dica_geral}</p>
+                      <p className="text-sm" style={{ color: "#a1a1aa" }}>
+                        {plan.dica_geral}
+                      </p>
                     </div>
                   )}
 
                   {/* Regenerate button */}
                   <button
                     onClick={handleReset}
-                    className="w-full text-xs text-gray-600 hover:text-gray-400 py-2 transition-colors"
+                    className="w-full text-xs py-2 transition-colors"
+                    style={{ color: "#52525b" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#a1a1aa";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#52525b";
+                    }}
                   >
                     Gerar novo plano
                   </button>

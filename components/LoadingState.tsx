@@ -1,46 +1,42 @@
 "use client";
 
-const tips = [
-  "Montando sua sequência de exercícios...",
-  "Calculando volume e intensidade...",
-  "Ajustando tempos de descanso...",
-  "Selecionando as melhores dicas de execução...",
-  "Finalizando seu treino personalizado...",
+const steps = [
+  "Analisando perfil e objetivos",
+  "Selecionando exercícios por padrão de movimento",
+  "Calculando volume e intensidade",
+  "Ajustando periodização",
+  "Finalizando prescrição",
 ];
 
 export default function LoadingState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-fade-in">
-      {/* Anel animado */}
-      <div className="relative w-24 h-24">
-        <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
-        <div className="absolute inset-0 rounded-full border-4 border-t-orange-500 border-r-orange-400 border-b-transparent border-l-transparent animate-spin" />
-        <div className="absolute inset-3 rounded-full border-4 border-t-transparent border-r-transparent border-b-orange-500/40 border-l-orange-500/40 animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
-        <div className="absolute inset-0 flex items-center justify-center text-3xl">
-          🏋️
-        </div>
+    <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+      {/* Spinner minimalista */}
+      <div className="relative w-10 h-10 mb-8">
+        <div className="absolute inset-0 rounded-full" style={{ border: '1.5px solid rgba(255,255,255,0.06)' }} />
+        <div
+          className="absolute inset-0 rounded-full animate-spin"
+          style={{ border: '1.5px solid transparent', borderTopColor: '#f97316', animationDuration: '0.8s' }}
+        />
       </div>
 
-      {/* Texto principal */}
-      <div className="text-center space-y-2">
-        <p className="text-white font-bold text-lg">IA gerando seu treino</p>
-        <p className="text-gray-400 text-sm">Isso pode levar alguns segundos...</p>
+      <p className="text-sm font-semibold mb-1" style={{ color: '#fafafa' }}>Gerando seu treino</p>
+      <p className="text-xs mb-8" style={{ color: '#52525b' }}>Isso pode levar alguns segundos</p>
+
+      {/* Progress bar */}
+      <div className="w-48 h-px overflow-hidden mb-8" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div
+          className="h-full animate-[loading_1.2s_ease-in-out_infinite]"
+          style={{ width: '40%', background: 'linear-gradient(90deg, transparent, #f97316, transparent)' }}
+        />
       </div>
 
-      {/* Barra de progresso indeterminada */}
-      <div className="w-64 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-        <div className="h-full w-1/3 bg-gradient-to-r from-orange-500 to-orange-300 rounded-full animate-[loading_1.5s_ease-in-out_infinite]" />
-      </div>
-
-      {/* Dicas rotativas */}
-      <div className="h-6 overflow-hidden">
-        <div className="flex flex-col animate-[scroll_7.5s_linear_infinite]">
-          {[...tips, ...tips].map((tip, i) => (
-            <p
-              key={i}
-              className="h-6 flex items-center text-xs text-gray-500 text-center"
-            >
-              {tip}
+      {/* Steps */}
+      <div className="h-5 overflow-hidden">
+        <div className="flex flex-col animate-[scroll_6s_linear_infinite]">
+          {[...steps, ...steps].map((step, i) => (
+            <p key={i} className="h-5 flex items-center text-xs" style={{ color: '#52525b' }}>
+              {step}
             </p>
           ))}
         </div>
