@@ -35,6 +35,7 @@ function rowToSaved(row: DBRow): SavedWorkout {
 export function useWorkoutHistory() {
   const [history, setHistory] = useState<SavedWorkout[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   useEffect(() => {
     async function load() {
@@ -95,5 +96,33 @@ export function useWorkoutHistory() {
     );
   }, []);
 
-  return { history, loading, getHistory, saveWorkout, toggleFavorite, deleteWorkout, setRating };
+  const loadMore = useCallback(() => {
+    setDisplayLimit((prev) => prev + 10);
+  }, []);
+
+  const resetLimit = useCallback(() => {
+    setDisplayLimit(10);
+  }, []);
+
+  const visibleWorkouts = history.slice(0, displayLimit);
+  const visibleFavorites = history.filter((h) => h.isFavorite).slice(0, displayLimit);
+  const hasMore = history.length > displayLimit;
+  const hasFavoritesMore = history.filter((h) => h.isFavorite).length > displayLimit;
+
+  return {
+    history,
+    loading,
+    getHistory,
+    saveWorkout,
+    toggleFavorite,
+    deleteWorkout,
+    setRating,
+    displayLimit,
+    loadMore,
+    resetLimit,
+    visibleWorkouts,
+    visibleFavorites,
+    hasMore,
+    hasFavoritesMore,
+  };
 }

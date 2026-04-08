@@ -32,14 +32,27 @@ export default function WorkoutHistory({
   onClose,
   onLoad,
 }: WorkoutHistoryProps) {
-  const { getHistory, toggleFavorite, deleteWorkout } = useWorkoutHistory();
+  const {
+    getHistory,
+    toggleFavorite,
+    deleteWorkout,
+    visibleWorkouts,
+    visibleFavorites,
+    loadMore,
+    hasMore,
+    hasFavoritesMore,
+    resetLimit,
+  } = useWorkoutHistory();
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Reset tab when panel opens
+  // Reset tab and pagination limit when panel opens
   useEffect(() => {
-    if (isOpen) setActiveTab("all");
-  }, [isOpen]);
+    if (isOpen) {
+      setActiveTab("all");
+      resetLimit();
+    }
+  }, [isOpen, resetLimit]);
 
   // Close on Escape key
   useEffect(() => {
@@ -52,10 +65,11 @@ export default function WorkoutHistory({
   }, [isOpen, onClose]);
 
   const allEntries = getHistory();
-  const displayed =
-    activeTab === "favorites"
-      ? allEntries.filter((e) => e.isFavorite)
-      : allEntries;
+  const displayed = activeTab === "favorites" ? visibleFavorites : visibleWorkouts;
+  const currentHasMore = activeTab === "favorites" ? hasFavoritesMore : hasMore;
+  const totalDisplayed = activeTab === "favorites"
+    ? allEntries.filter((e) => e.isFavorite).length
+    : allEntries.length;
 
   const favCount = allEntries.filter((e) => e.isFavorite).length;
 
@@ -194,7 +208,8 @@ export default function WorkoutHistory({
               )}
             </div>
           ) : (
-            displayed.map((entry) => (
+            <>
+            {displayed.map((entry) => (
               <div
                 key={entry.id}
                 className="group rounded-xl overflow-hidden transition-all duration-200"
@@ -340,7 +355,19 @@ export default function WorkoutHistory({
                   </div>
                 </div>
               </div>
-            ))
+            ))}
+            {currentHasMore && (
+              <button
+                onClick={loadMore}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-all mt-2"
+                style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.06)", color: "#a1a1aa" }}
+                onMouseEnter={e => { e.currentTarget.style.color = "#fafafa"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "#a1a1aa"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+              >
+                Ver mais ({totalDisplayed - displayed.length} restantes)
+              </button>
+            )}
+            </>
           )}
         </div>
 

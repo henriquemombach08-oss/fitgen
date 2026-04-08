@@ -116,6 +116,7 @@ async function exportNutritionToPDF(
   bodyData: BodyData,
   goal: string,
   trainingTime: TrainingTime | null,
+  dietType: DietType | null,
   monthlyPlan: MonthlyNutritionPlan | null
 ) {
   const { jsPDF } = await import("jspdf");
@@ -147,7 +148,7 @@ async function exportNutritionToPDF(
 
   doc.setFontSize(9); doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  doc.text(`${bodyData.sex === "M" ? "Masculino" : "Feminino"} · ${bodyData.age} anos · ${bodyData.weight}kg · ${bodyData.height}cm · ${bodyData.activityLevel}${trainingTime ? ` · Treino: ${trainingTime}` : ""}`, m, y); y += 8;
+  doc.text(`${bodyData.sex === "M" ? "Masculino" : "Feminino"} · ${bodyData.age} anos · ${bodyData.weight}kg · ${bodyData.height}cm · ${bodyData.activityLevel}${trainingTime ? ` · Treino: ${trainingTime}` : ""}${dietType ? ` · Dieta: ${dietType}` : ""}`, m, y); y += 8;
 
   // TDEE box
   doc.setFillColor(245, 245, 245);
@@ -306,6 +307,8 @@ export default function NutritionPanel({ userProfile }: Props) {
   const [monthlyLoading, setMonthlyLoading] = useState(false);
   const [monthlyError, setMonthlyError] = useState("");
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [sharingPlan, setSharingPlan] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [recalculatingMeal, setRecalculatingMeal] = useState<number | null>(null);
 
   const [body, setBody] = useState<BodyData>({
@@ -356,6 +359,7 @@ export default function NutritionPanel({ userProfile }: Props) {
           goals: [nutritionGoal],
           basePlan: plan,
           trainingTime,
+          dietType,
         }),
       });
       const data = await res.json();
@@ -401,9 +405,30 @@ export default function NutritionPanel({ userProfile }: Props) {
     if (!plan) return;
     setExportingPDF(true);
     try {
-      await exportNutritionToPDF(plan, body, nutritionGoal, trainingTime, monthlyPlan);
+      await exportNutritionToPDF(plan, body, nutritionGoal, trainingTime, dietType, monthlyPlan);
     } finally {
       setExportingPDF(false);
+    }
+  }
+
+  async function handleShare() {
+    if (!plan) return;
+    setSharingPlan(true);
+    try {
+      const res = await fetch("/api/nutrition-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, goal: nutritionGoal, dietType, bodyData: body, trainingTime }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        setShareUrl(data.url);
+        await navigator.clipboard.writeText(data.url).catch(() => {});
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSharingPlan(false);
     }
   }
 
@@ -460,6 +485,27 @@ export default function NutritionPanel({ userProfile }: Props) {
               </div>
               <div className="flex items-center gap-2">
                 {step === "result" && plan && (
+                  <>
+                  <button
+                    onClick={handleShare}
+                    disabled={sharingPlan}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-40"
+                    style={{ background: shareUrl ? "rgba(16,185,129,0.10)" : "#141414", border: shareUrl ? "1px solid rgba(16,185,129,0.20)" : "1px solid rgba(255,255,255,0.06)", color: shareUrl ? "#10b981" : "#a1a1aa" }}
+                    title={shareUrl ? "Link copiado!" : "Compartilhar plano"}
+                  >
+                    {sharingPlan ? (
+                      <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                      </svg>
+                    )}
+                    {shareUrl ? "Copiado!" : "Compartilhar"}
+                  </button>
                   <button
                     onClick={handleExportPDF}
                     disabled={exportingPDF}
@@ -480,6 +526,7 @@ export default function NutritionPanel({ userProfile }: Props) {
                     )}
                     PDF
                   </button>
+                  </>
                 )}
                 <button onClick={handleClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-xs transition-colors"
                   style={{ color: "#52525b" }}

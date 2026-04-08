@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { MonthlyNutritionPlan, MonthlyNutritionRequest } from "@/types/nutrition";
 
-function buildMonthlyPrompt(data: MonthlyNutritionRequest): string {
+function buildMonthlyPrompt(data: MonthlyNutritionRequest, dietType?: string): string {
   const { bodyData, level, goals, basePlan, trainingTime } = data;
   const isAdvanced = ["Avançado", "Atleta / Competidor"].includes(level);
   const isCompetitor = level === "Atleta / Competidor";
@@ -48,6 +48,14 @@ Baseado em Eric Helms: diet breaks a cada 4-6 semanas de déficit reduzem a adap
 • Semana 4: ${basePlan.meta_calorica - 75}kcal — deload nutricional alinhado com deload de treino`;
   }
 
+  const dietConstraintMap: Record<string, string> = {
+    "Vegano":          "Vegano — sem produtos de origem animal (sem carnes, ovos, laticínios, mel)",
+    "Vegetariano":     "Vegetariano — sem carnes; ovos e laticínios permitidos",
+    "Low Carb":        "Low Carb — máximo 130g de carboidratos por dia",
+    "Keto / Low-carb": "Cetogênico — máximo 50g de carboidratos por dia, alto teor de gordura",
+  };
+  const dietConstraint = dietType && dietType !== "Onívoro" ? dietConstraintMap[dietType] : null;
+
   return `Você é um nutricionista esportivo certificado (CISSN) especializado em periodização nutricional (Renaissance Periodization, Eric Helms, Layne Norton).
 
 PERFIL:
@@ -56,7 +64,7 @@ PERFIL:
 • Horário de treino: ${trainingTime ?? "Variável"}
 • TDEE base: ${basePlan.tdee}kcal
 • Meta calórica base: ${basePlan.meta_calorica}kcal
-
+${dietConstraint ? `\nRESTRIÇÃO ALIMENTAR: ${dietConstraint} — todos os alimentos e refeições devem respeitar esta restrição.\n` : ""}
 ${periodizationGuide}
 
 Gere um PLANO NUTRICIONAL MENSAL com 4 semanas detalhadas. Para cada semana:
@@ -99,13 +107,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: MonthlyNutritionRequest = await request.json();
-    const { bodyData, level, goals, basePlan } = body;
+    const { bodyData, level, goals, basePlan, dietType } = body;
 
     if (!bodyData || !level || !goals?.length || !basePlan) {
       return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
     }
 
-    const prompt = buildMonthlyPrompt(body);
+    const prompt = buildMonthlyPrompt(body, dietType);
 
     const completion = await client.chat.completions.create({
       model: "llama-3.3-70b-versatile",

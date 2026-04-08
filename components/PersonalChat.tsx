@@ -11,24 +11,59 @@ interface Props {
   userProfile?: { level: string; goals: string[] };
 }
 
+const STORAGE_KEY = "fitgen-chat";
+
+const WELCOME_MESSAGE: Message = {
+  role: "assistant",
+  content:
+    "Olá! Sou seu Personal IA. Pode me perguntar sobre treino, nutrição, recuperação, suplementação ou qualquer dúvida fitness. Como posso ajudar?",
+};
+
+function loadMessages(): Message[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved) as Message[];
+  } catch {
+    // ignore parse errors
+  }
+  return [WELCOME_MESSAGE];
+}
+
 export default function PersonalChat({ userProfile }: Props) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content:
-        "Olá! Sou seu personal trainer virtual 💪 Pode me perguntar sobre treinos, técnicas, nutrição ou qualquer dúvida fitness!",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [trashHover, setTrashHover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setMessages(loadMessages());
+    initialized.current = true;
+  }, []);
+
+  // Persist to localStorage on every messages change (skip before init)
+  useEffect(() => {
+    if (!initialized.current) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40)));
+    } catch {
+      // ignore quota errors
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open, loading]);
+
+  function handleClear() {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }
 
   async function handleSend() {
     const trimmed = input.trim();
@@ -131,6 +166,30 @@ export default function PersonalChat({ userProfile }: Props) {
                 </p>
               </div>
             </div>
+
+            {/* Clear button — only shown when there are messages */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleClear}
+                onMouseEnter={() => setTrashHover(true)}
+                onMouseLeave={() => setTrashHover(false)}
+                aria-label="Limpar conversa"
+                className="w-6 h-6 flex items-center justify-center rounded transition-colors"
+                style={{
+                  background: "transparent",
+                  color: trashHover ? "#f87171" : "#52525b",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14H6L5 6"/>
+                  <path d="M10 11v6m4-6v6"/>
+                  <path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Messages */}

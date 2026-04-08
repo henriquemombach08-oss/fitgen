@@ -133,4 +133,5 @@ export interface MonthlyNutritionRequest {
   goals: string[];
   basePlan: NutritionPlan;      // plano base já gerado
   trainingTime?: TrainingTime;
+  dietType?: DietType;
 }

@@ -9,6 +9,9 @@ import AuthButton from "@/components/AuthButton";
 import PersonalChat from "@/components/PersonalChat";
 import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import NutritionPanel from "@/components/NutritionPanel";
+import ProgressStats from "@/components/ProgressStats";
+import PhotoAnalysis from "@/components/PhotoAnalysis";
+import Onboarding from "@/components/Onboarding";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -104,6 +107,8 @@ export default function Home() {
         }}
       />
 
+      <Onboarding />
+
       {/* WorkoutHistory drawer */}
       <WorkoutHistory isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} onLoad={handleLoadFromHistory} />
 
@@ -139,6 +144,11 @@ export default function Home() {
                 </svg>
               </button>
 
+              <ProgressStats />
+              <PhotoAnalysis
+                userLevel={lastFormData?.level}
+                exerciseNames={workout?.exercicios?.map(e => e.nome)}
+              />
               <NutritionPanel userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals, equipment: lastFormData.equipment } : undefined} />
               <WeeklyPlanCard userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals.map(String), equipment: lastFormData.equipment } : undefined} />
               <AuthButton />
