@@ -77,6 +77,7 @@ export interface SavedWorkout {
   formData: WorkoutFormData;
   createdAt: string;
   isFavorite: boolean;
+  rating?: number;
 }
 
 export interface SetLog {
