@@ -18,6 +18,7 @@ interface ExerciseTrackerProps {
   onStartTimer: (setNumber: number) => void;
   onAddPhoto: (dataUrl: string) => void;
   onRemovePhoto: (index: number) => void;
+  previousLogs?: { weight: string; reps: string; note: string }[];
 }
 
 export default function ExerciseTracker({
@@ -32,6 +33,7 @@ export default function ExerciseTracker({
   onStartTimer,
   onAddPhoto,
   onRemovePhoto,
+  previousLogs,
 }: ExerciseTrackerProps) {
   const [status, setStatus] = useState<Status>(() =>
     logs.length > 0 ? "done" : "idle"
@@ -152,6 +154,16 @@ export default function ExerciseTracker({
           </span>
           Iniciar exercício
         </button>
+        {previousLogs && previousLogs.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            <span className="text-xs text-gray-600">Última:</span>
+            {previousLogs.map((l, i) => (
+              <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700/50 text-gray-600">
+                {l.weight || "—"}×{l.reps || "—"}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -201,6 +213,18 @@ export default function ExerciseTracker({
                 className="text-xs px-2 py-0.5 rounded-md bg-green-500/10 border border-green-500/20 text-green-400 font-medium"
               >
                 {i + 1}: {l.weight || "—"} × {l.reps || "—"}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Previous logs reference */}
+        {previousLogs && previousLogs.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            <span className="text-xs text-gray-600">Ref:</span>
+            {previousLogs.map((l, i) => (
+              <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-gray-800 border border-gray-700/50 text-gray-600">
+                {l.weight || "—"}×{l.reps || "—"}
               </span>
             ))}
           </div>

@@ -7,6 +7,7 @@ import WorkoutHistory from "@/components/WorkoutHistory";
 import LoadingState from "@/components/LoadingState";
 import AuthButton from "@/components/AuthButton";
 import PersonalChat from "@/components/PersonalChat";
+import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import { WorkoutFormData, Workout, GenerateResponse, SavedWorkout } from "@/types/workout";
 import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 
@@ -133,6 +134,9 @@ export default function Home() {
             >
               🕓
             </button>
+
+            {/* Plano Semanal */}
+            <WeeklyPlanCard userProfile={lastFormData ? { level: lastFormData.level, goals: lastFormData.goals.map(String), equipment: lastFormData.equipment } : undefined} />
 
             {/* Login Google */}
             <AuthButton />

@@ -92,3 +92,18 @@ export interface WorkoutReportData {
   melhorias: string[];
   dica_principal: string;
 }
+
+export interface WeeklyDay {
+  dia: string;
+  foco: string;
+  tipo: "Treino" | "Rest" | string;
+  musculosprincipais: string[];
+  observacao: string;
+}
+
+export interface WeeklyPlan {
+  nome: string;
+  descricao: string;
+  dias: WeeklyDay[];
+  dica_geral: string;
+}

@@ -10,8 +10,10 @@ import DifficultyAdjuster from "@/components/DifficultyAdjuster";
 import ExerciseTracker from "@/components/ExerciseTracker";
 import ExerciseGif from "@/components/ExerciseGif";
 import WorkoutReport from "@/components/WorkoutReport";
+import WorkoutMode from "@/components/WorkoutMode";
 import { parseRestTime } from "@/utils/parseRestTime";
 import { useSetLogs } from "@/hooks/useSetLogs";
+import { useLoadProgression } from "@/hooks/useLoadProgression";
 
 interface WorkoutResultProps {
   workout: Workout;
@@ -240,6 +242,9 @@ export default function WorkoutResult({
   const [copied, setCopied] = useState(false);
   const [savingPDF, setSavingPDF] = useState(false);
 
+  // ── State: Modo Treino
+  const [workoutModeOpen, setWorkoutModeOpen] = useState(false);
+
   // ── State: Agente 3 — currentWorkout (mutable copy for replace + difficulty)
   const [currentWorkout, setCurrentWorkout] = useState<Workout>(workout);
 
@@ -256,6 +261,10 @@ export default function WorkoutResult({
   // ── Set logs (localStorage, keyed by workout id or nome)
   const workoutKey = savedWorkout?.id ?? workout.nome;
   const { logs: setLogs, addLog, clearExerciseLogs } = useSetLogs(workoutKey);
+
+  // ── Load progression
+  const exerciseNames = currentWorkout.exercicios.map((e) => e.nome);
+  const { previousLogs } = useLoadProgression(exerciseNames);
 
   // ── Exercise photos (in-memory per exercise index)
   const [exercisePhotos, setExercisePhotos] = useState<Record<number, string[]>>({});
@@ -399,11 +408,19 @@ export default function WorkoutResult({
                 </h2>
               </div>
 
-              {/* Right side: duration badge + Favorite + History buttons */}
+              {/* Right side: duration badge + Modo Treino + Favorite + History buttons */}
               <div className="flex items-center gap-2 shrink-0">
                 <span className="bg-orange-500/20 border border-orange-500/40 text-orange-300 text-sm font-semibold px-3 py-1.5 rounded-lg">
                   ⏱ {currentWorkout.duracao_estimada}
                 </span>
+
+                {/* Modo Treino button */}
+                <button
+                  onClick={() => setWorkoutModeOpen(true)}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 transition-colors"
+                >
+                  🏋️ Modo Treino
+                </button>
 
                 {/* Agente 1 — FavoriteButton */}
                 {savedWorkout && onToggleFavorite && (
@@ -537,6 +554,7 @@ export default function WorkoutResult({
                     onAddPhoto={(url) => handleAddPhoto(index, url)}
                     onRemovePhoto={(i) => handleRemovePhoto(index, i)}
                     onStartTimer={(setNumber) => handleStartTimer(index, setNumber)}
+                    previousLogs={previousLogs[ex.nome]}
                   />
                 </div>
               </div>
@@ -637,6 +655,10 @@ export default function WorkoutResult({
           )}
         </button>
       </div>
+
+      {workoutModeOpen && (
+        <WorkoutMode workout={currentWorkout} onClose={() => setWorkoutModeOpen(false)} />
+      )}
     </>
   );
 }
