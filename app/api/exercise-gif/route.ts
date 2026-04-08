@@ -24,6 +24,15 @@ function searchTerms(name: string): string[] {
   return [...new Set(terms)];
 }
 
+async function fetchWithKey(url: string, apiKey: string) {
+  return fetch(url, {
+    headers: {
+      "X-RapidAPI-Key": apiKey,
+      "X-RapidAPI-Host": "exercisedb.p.rapidapi.com",
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   const name = request.nextUrl.searchParams.get("name");
   if (!name) return NextResponse.json({ gifUrl: null });
@@ -33,26 +42,36 @@ export async function GET(request: NextRequest) {
 
   for (const term of searchTerms(name)) {
     try {
-      const res = await fetch(
+      const res = await fetchWithKey(
         `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(term)}?limit=3&offset=0`,
-        {
-          headers: {
-            "X-RapidAPI-Key": apiKey,
-            "X-RapidAPI-Host": "exercisedb.p.rapidapi.com",
-          },
-          next: { revalidate: 86400 },
-        }
+        apiKey
       );
-
       if (!res.ok) continue;
 
       const data: ExerciseDBResult[] = await res.json();
       if (!Array.isArray(data) || data.length === 0) continue;
 
       const exercise = data[0];
-      // v2.2 removed gifUrl field — construct from id
-      const gifUrl = exercise.gifUrl ?? `https://v2.exercisedb.io/image/${exercise.id}`;
-      return NextResponse.json({ gifUrl });
+
+      // gifUrl present in response (v1 / some v2 plans)
+      if (exercise.gifUrl) {
+        return NextResponse.json({ gifUrl: exercise.gifUrl });
+      }
+
+      // v2.2: gifUrl removed from list endpoint — fetch by ID to get it
+      const detail = await fetchWithKey(
+        `https://exercisedb.p.rapidapi.com/exercises/exercise/${exercise.id}`,
+        apiKey
+      );
+      if (detail.ok) {
+        const ex: ExerciseDBResult = await detail.json();
+        if (ex.gifUrl) return NextResponse.json({ gifUrl: ex.gifUrl });
+      }
+
+      // Last resort: construct URL from known CDN pattern
+      return NextResponse.json({
+        gifUrl: `https://v2.exercisedb.io/image/${exercise.id}`,
+      });
     } catch {
       continue;
     }
