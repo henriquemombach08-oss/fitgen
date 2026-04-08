@@ -3,61 +3,57 @@
 import { useState, useCallback } from "react";
 import { SetLog } from "@/types/workout";
 
-// exerciseIndex -> array of SetLog (one per set)
-type WorkoutLogs = Record<number, SetLog[]>;
+// exerciseIndex -> array of SetLog (one per completed set)
+export type WorkoutLogs = Record<number, SetLog[]>;
 
 const STORAGE_KEY_PREFIX = "fitgen_logs_";
 
-function emptyLog(): SetLog {
-  return { weight: "", reps: "", note: "" };
-}
-
-function initLogs(workoutKey: string, exerciseSeries: number[]): WorkoutLogs {
-  const defaults = Object.fromEntries(
-    exerciseSeries.map((count, i) => [i, Array.from({ length: count }, emptyLog)])
-  );
-
-  if (typeof window === "undefined") return defaults;
-
+function load(workoutKey: string): WorkoutLogs {
+  if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${workoutKey}`);
-    if (!raw) return defaults;
-    const saved: WorkoutLogs = JSON.parse(raw);
-    // Merge saved data with the expected structure
-    return Object.fromEntries(
-      exerciseSeries.map((count, i) => {
-        const existing = saved[i] ?? [];
-        return [i, Array.from({ length: count }, (_, j) => existing[j] ?? emptyLog())];
-      })
-    );
+    return raw ? JSON.parse(raw) : {};
   } catch {
-    return defaults;
+    return {};
   }
 }
 
-export function useSetLogs(workoutKey: string, exerciseSeries: number[]) {
-  const [logs, setLogs] = useState<WorkoutLogs>(() =>
-    initLogs(workoutKey, exerciseSeries)
-  );
+function persist(workoutKey: string, logs: WorkoutLogs) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${workoutKey}`, JSON.stringify(logs));
+  } catch {
+    // silently ignore quota errors
+  }
+}
 
-  const updateLog = useCallback(
-    (exerciseIndex: number, setIndex: number, field: keyof SetLog, value: string) => {
+export function useSetLogs(workoutKey: string) {
+  const [logs, setLogs] = useState<WorkoutLogs>(() => load(workoutKey));
+
+  const addLog = useCallback(
+    (exerciseIndex: number, log: SetLog) => {
       setLogs((prev) => {
-        const exerciseLogs = [...(prev[exerciseIndex] ?? [])];
-        exerciseLogs[setIndex] = { ...exerciseLogs[setIndex], [field]: value };
-        const updated = { ...prev, [exerciseIndex]: exerciseLogs };
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem(`${STORAGE_KEY_PREFIX}${workoutKey}`, JSON.stringify(updated));
-          } catch {
-            // silently ignore quota errors
-          }
-        }
+        const updated = {
+          ...prev,
+          [exerciseIndex]: [...(prev[exerciseIndex] ?? []), log],
+        };
+        persist(workoutKey, updated);
         return updated;
       });
     },
     [workoutKey]
   );
 
-  return { logs, updateLog };
+  const clearExerciseLogs = useCallback(
+    (exerciseIndex: number) => {
+      setLogs((prev) => {
+        const updated = { ...prev, [exerciseIndex]: [] };
+        persist(workoutKey, updated);
+        return updated;
+      });
+    },
+    [workoutKey]
+  );
+
+  return { logs, addLog, clearExerciseLogs };
 }

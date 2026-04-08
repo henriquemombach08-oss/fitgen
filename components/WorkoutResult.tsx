@@ -7,7 +7,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import WorkoutRating from "@/components/WorkoutRating";
 import RestTimer from "@/components/RestTimer";
 import DifficultyAdjuster from "@/components/DifficultyAdjuster";
-import SetLogger from "@/components/SetLogger";
+import ExerciseTracker from "@/components/ExerciseTracker";
 import WorkoutReport from "@/components/WorkoutReport";
 import { parseRestTime } from "@/utils/parseRestTime";
 import { useSetLogs } from "@/hooks/useSetLogs";
@@ -254,10 +254,7 @@ export default function WorkoutResult({
 
   // ── Set logs (localStorage, keyed by workout id or nome)
   const workoutKey = savedWorkout?.id ?? workout.nome;
-  const { logs: setLogs, updateLog } = useSetLogs(
-    workoutKey,
-    workout.exercicios.map((e) => e.series)
-  );
+  const { logs: setLogs, addLog, clearExerciseLogs } = useSetLogs(workoutKey);
 
   // ─── Handlers: copy & PDF ────────────────────────────────────────────────
   async function handleCopy() {
@@ -505,15 +502,16 @@ export default function WorkoutResult({
                     💡 {ex.dica}
                   </p>
 
-                  {/* Set Logger */}
-                  <SetLogger
+                  {/* Exercise Tracker */}
+                  <ExerciseTracker
+                    exerciseIndex={index}
                     totalSets={ex.series}
                     targetReps={ex.repeticoes}
                     descanso={ex.descanso}
                     logs={setLogs[index] ?? []}
-                    onUpdate={(setIndex, field, value) =>
-                      updateLog(index, setIndex, field, value)
-                    }
+                    onAdd={(log) => addLog(index, log)}
+                    onClear={() => clearExerciseLogs(index)}
+                    onStartTimer={(setNumber) => handleStartTimer(index, setNumber)}
                   />
                 </div>
               </div>
