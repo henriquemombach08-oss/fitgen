@@ -10,7 +10,11 @@ export type MuscleGroup =
   | "Panturrilha"
   | "Push (Peito + Ombro + Tríceps)"
   | "Pull (Costas + Bíceps)"
-  | "Upper Body";
+  | "Upper Body"
+  | "Trapézio"
+  | "Lombar"
+  | "Antebraço"
+  | "Pescoço";
 
 export type Equipment =
   | "Academia completa"
@@ -43,6 +47,7 @@ export interface WorkoutFormData {
 
 export interface Exercise {
   nome: string;
+  en_name?: string;
   series: number;
   repeticoes: string;
   descanso: string;

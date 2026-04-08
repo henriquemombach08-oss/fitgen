@@ -8,6 +8,7 @@ import WorkoutRating from "@/components/WorkoutRating";
 import RestTimer from "@/components/RestTimer";
 import DifficultyAdjuster from "@/components/DifficultyAdjuster";
 import ExerciseTracker from "@/components/ExerciseTracker";
+import ExerciseGif from "@/components/ExerciseGif";
 import WorkoutReport from "@/components/WorkoutReport";
 import { parseRestTime } from "@/utils/parseRestTime";
 import { useSetLogs } from "@/hooks/useSetLogs";
@@ -460,11 +461,14 @@ export default function WorkoutResult({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  {/* Exercise name + Replace button (Agente 3) */}
+                  {/* Exercise name row: gif button + name + replace button */}
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-white font-semibold text-sm leading-snug">
-                      {ex.nome}
-                    </h4>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {ex.en_name && <ExerciseGif enName={ex.en_name} />}
+                      <h4 className="text-white font-semibold text-sm leading-snug">
+                        {ex.nome}
+                      </h4>
+                    </div>
                     <button
                       onClick={() => handleReplaceExercise(index)}
                       disabled={replacingIndex !== null}

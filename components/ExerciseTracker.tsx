@@ -17,6 +17,7 @@ interface ExerciseTrackerProps {
 }
 
 export default function ExerciseTracker({
+  exerciseIndex: _exerciseIndex,
   totalSets,
   targetReps,
   descanso,

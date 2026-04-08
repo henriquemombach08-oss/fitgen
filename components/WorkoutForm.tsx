@@ -17,11 +17,13 @@ interface WorkoutFormProps {
 
 const basicMuscleGroups: MuscleGroup[] = [
   "Peito", "Costas", "Pernas", "Ombros", "Braços", "Full Body",
+  "Glúteos", "Core / Abdômen",
 ];
 const advancedMuscleGroups: MuscleGroup[] = [
   ...basicMuscleGroups,
-  "Glúteos", "Core / Abdômen", "Panturrilha",
+  "Panturrilha",
   "Push (Peito + Ombro + Tríceps)", "Pull (Costas + Bíceps)", "Upper Body",
+  "Trapézio", "Lombar", "Antebraço", "Pescoço",
 ];
 
 const basicEquipments: Equipment[] = [
@@ -44,6 +46,7 @@ const muscleIcons: Record<MuscleGroup, string> = {
   "Full Body": "⚡", Glúteos: "🍑", "Core / Abdômen": "🎯",
   Panturrilha: "🦶", "Push (Peito + Ombro + Tríceps)": "🚀",
   "Pull (Costas + Bíceps)": "🧲", "Upper Body": "🏆",
+  Trapézio: "🏔️", Lombar: "↙️", Antebraço: "💪", Pescoço: "🦒",
 };
 
 const goalIcons: Record<Goal, string> = {

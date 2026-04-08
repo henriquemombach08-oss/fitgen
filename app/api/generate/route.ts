@@ -47,6 +47,7 @@ Retorne APENAS um objeto JSON válido, sem markdown, sem explicações, sem text
   "exercicios": [
     {
       "nome": "nome do exercício",
+      "en_name": "exercise name in English for GIF lookup",
       "series": 4,
       "repeticoes": "8-12",
       "descanso": "60s",
@@ -62,7 +63,8 @@ Regras:
 - Use exercícios reais e seguros
 - Nível ${data.level}: ${levelGuide[data.level] ?? "volume moderado"}
 - Objetivos ${data.goals.join(", ")}: ${data.goals.map((g) => goalGuide[g] ?? "volume moderado").join(" | ")}
-- Distribua os exercícios proporcionalmente entre os grupos musculares selecionados${advancedInstructions}`;
+- Distribua os exercícios proporcionalmente entre os grupos musculares selecionados
+- O campo "en_name" deve conter o nome do exercício em inglês para busca de animações (ex: "Barbell Bench Press", "Squat", "Pull-up")${advancedInstructions}`;
 }
 
 export async function POST(request: NextRequest) {
