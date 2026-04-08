@@ -50,6 +50,37 @@ const advancedGoals: Goal[] = [
   "Powerlifting",
 ];
 
+// Grupos que se sobrepõem: selecionar um remove os conflitantes
+const muscleConflicts: Partial<Record<MuscleGroup, MuscleGroup[]>> = {
+  // Grupos genéricos removem os específicos
+  "Braços":                        ["Bíceps", "Tríceps", "Antebraço"],
+  "Pernas":                        ["Quadríceps", "Posterior", "Panturrilha", "Glúteos"],
+  "Full Body":                     ["Peito", "Costas", "Pernas", "Ombros", "Braços", "Bíceps", "Tríceps", "Quadríceps", "Posterior", "Glúteos", "Core / Abdômen", "Panturrilha", "Trapézio", "Lombar", "Antebraço", "Pescoço", "Upper Body", "Push (Peito + Ombro + Tríceps)", "Pull (Costas + Bíceps)"],
+  "Upper Body":                    ["Peito", "Costas", "Ombros", "Braços", "Bíceps", "Tríceps", "Antebraço", "Trapézio", "Push (Peito + Ombro + Tríceps)", "Pull (Costas + Bíceps)"],
+  "Push (Peito + Ombro + Tríceps)": ["Peito", "Ombros", "Tríceps"],
+  "Pull (Costas + Bíceps)":        ["Costas", "Bíceps"],
+  // Grupos específicos removem os genéricos que os contêm
+  "Bíceps":    ["Braços", "Upper Body", "Full Body", "Pull (Costas + Bíceps)"],
+  "Tríceps":   ["Braços", "Upper Body", "Full Body", "Push (Peito + Ombro + Tríceps)"],
+  "Antebraço": ["Braços", "Upper Body", "Full Body"],
+  "Quadríceps":["Pernas", "Full Body"],
+  "Posterior": ["Pernas", "Full Body"],
+  "Panturrilha":["Pernas", "Full Body"],
+  "Glúteos":   ["Pernas", "Full Body"],
+  "Peito":     ["Full Body", "Upper Body", "Push (Peito + Ombro + Tríceps)"],
+  "Costas":    ["Full Body", "Upper Body", "Pull (Costas + Bíceps)"],
+  "Ombros":    ["Full Body", "Upper Body", "Push (Peito + Ombro + Tríceps)"],
+  "Trapézio":  ["Full Body", "Upper Body"],
+  "Lombar":    ["Full Body"],
+  "Pescoço":   ["Full Body"],
+  "Core / Abdômen": ["Full Body"],
+};
+
+function resolveMuscleConflicts(opt: MuscleGroup, current: MuscleGroup[]): MuscleGroup[] {
+  const toRemove = new Set<string>(muscleConflicts[opt] ?? []);
+  return [...current.filter((v) => !toRemove.has(v)), opt];
+}
+
 const muscleIcons: Record<MuscleGroup, string> = {
   "Full Body": "⚡",
   Peito: "🫁", Costas: "🔙", Ombros: "🔝",
@@ -131,6 +162,7 @@ function MultiSelectGroup<T extends string>({
   icons,
   advanced,
   basicCount,
+  resolveConflicts,
 }: {
   label: string;
   options: T[];
@@ -139,13 +171,18 @@ function MultiSelectGroup<T extends string>({
   icons?: Record<string, string>;
   advanced?: boolean;
   basicCount?: number;
+  resolveConflicts?: (opt: T, current: T[]) => T[];
 }) {
   function toggle(opt: T) {
     if (values.includes(opt)) {
       if (values.length === 1) return; // mínimo 1 selecionado
       onChange(values.filter((v) => v !== opt));
     } else {
-      onChange([...values, opt]);
+      if (resolveConflicts) {
+        onChange(resolveConflicts(opt, values));
+      } else {
+        onChange([...values, opt]);
+      }
     }
   }
 
@@ -284,6 +321,7 @@ export default function WorkoutForm({ onSubmit, isLoading }: WorkoutFormProps) {
         icons={muscleIcons}
         advanced={form.advancedMode}
         basicCount={basicMuscleGroups.length}
+        resolveConflicts={resolveMuscleConflicts}
       />
 
       <SingleSelectGroup
