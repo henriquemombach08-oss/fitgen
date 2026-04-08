@@ -58,12 +58,37 @@ export interface NutritionPlan {
   fonte_metodologica: string;  // RP, Eric Helms, etc.
 }
 
+export type DietType =
+  | "Onívoro"
+  | "Vegetariano"
+  | "Vegano"
+  | "Keto / Low-carb"
+  | "Paleo"
+  | "Mediterrâneo"
+  | "Low Carb";
+
 export interface NutritionRequest {
   bodyData: BodyData;
   level: string;
   goals: string[];
   equipment: string;
   trainingTime?: TrainingTime;
+  dietType?: DietType;
+}
+
+export interface ReplaceMealRequest {
+  meal: Meal;
+  mealIndex: number;
+  plan: NutritionPlan;
+  goals: string[];
+  level: string;
+  dietType?: DietType;
+  trainingTime?: TrainingTime;
+}
+
+export interface ReplaceMealResponse {
+  meal?: Meal;
+  error?: string;
 }
 
 export interface NutritionResponse {

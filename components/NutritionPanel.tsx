@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   BodyData, NutritionPlan, ActivityLevel, Sex,
-  TrainingTime, MonthlyNutritionPlan,
+  TrainingTime, MonthlyNutritionPlan, DietType, Meal,
 } from "@/types/nutrition";
 import { WorkoutFormData } from "@/types/workout";
 
@@ -42,6 +42,16 @@ const nutritionGoalOptions: { value: NutritionGoal; icon: string; desc: string }
   { value: "Potência",                 icon: "⚡", desc: "Explosão e velocidade" },
   { value: "Contest Prep / Definição", icon: "🏆", desc: "Preparação para competição" },
   { value: "Powerlifting",             icon: "🥇", desc: "Squat, Bench, Deadlift máximos" },
+];
+
+const dietTypeOptions: { value: DietType; label: string; desc: string }[] = [
+  { value: "Onívoro",        label: "Onívoro",       desc: "Sem restrições alimentares" },
+  { value: "Low Carb",       label: "Low Carb",      desc: "80–130g carbs/dia" },
+  { value: "Keto / Low-carb",label: "Keto",          desc: "< 50g carbs/dia, alto em gordura" },
+  { value: "Vegetariano",    label: "Vegetariano",   desc: "Sem carnes, com ovos e laticínios" },
+  { value: "Vegano",         label: "Vegano",        desc: "100% plant-based" },
+  { value: "Paleo",          label: "Paleo",         desc: "Sem grãos, laticínios ou processados" },
+  { value: "Mediterrâneo",   label: "Mediterrâneo",  desc: "Peixe, azeite, grãos integrais" },
 ];
 
 const evidenceDotColors: Record<string, string> = {
@@ -291,10 +301,12 @@ export default function NutritionPanel({ userProfile }: Props) {
     (userProfile?.goals?.[0] as NutritionGoal) ?? "Hipertrofia"
   );
   const [trainingTime, setTrainingTime] = useState<TrainingTime>("Tarde (15h–17h)");
+  const [dietType, setDietType] = useState<DietType>("Onívoro");
   const [monthlyPlan, setMonthlyPlan] = useState<MonthlyNutritionPlan | null>(null);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
   const [monthlyError, setMonthlyError] = useState("");
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [recalculatingMeal, setRecalculatingMeal] = useState<number | null>(null);
 
   const [body, setBody] = useState<BodyData>({
     weight: 80, height: 175, age: 25, sex: "M", activityLevel: "Moderadamente ativo",
@@ -317,6 +329,7 @@ export default function NutritionPanel({ userProfile }: Props) {
           goals: [nutritionGoal],
           equipment: userProfile?.equipment ?? "Academia completa",
           trainingTime,
+          dietType,
         }),
       });
       const data = await res.json();
@@ -352,6 +365,35 @@ export default function NutritionPanel({ userProfile }: Props) {
       setMonthlyError("Falha na conexão.");
     } finally {
       setMonthlyLoading(false);
+    }
+  }
+
+  async function handleReplaceMeal(mealIndex: number) {
+    if (!plan) return;
+    setRecalculatingMeal(mealIndex);
+    try {
+      const res = await fetch("/api/nutrition-replace-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meal: plan.refeicoes[mealIndex],
+          mealIndex,
+          plan,
+          goals: [nutritionGoal],
+          level: userProfile?.level ?? "Intermediário",
+          dietType,
+          trainingTime,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error || !data.meal) return;
+      const updatedMeals = [...plan.refeicoes];
+      updatedMeals[mealIndex] = data.meal as Meal;
+      setPlan({ ...plan, refeicoes: updatedMeals });
+    } catch {
+      // silently fail — meal stays unchanged
+    } finally {
+      setRecalculatingMeal(null);
     }
   }
 
@@ -412,7 +454,7 @@ export default function NutritionPanel({ userProfile }: Props) {
                 <h2 className="font-semibold text-sm" style={{ color: "#fafafa" }}>Plano Nutricional</h2>
                 <p className="text-xs mt-0.5" style={{ color: "#52525b" }}>
                   {step === "result" && plan
-                    ? `${nutritionGoal} · ${trainingTime} · TDEE: ${plan.tdee} kcal`
+                    ? `${nutritionGoal} · ${dietType} · TDEE: ${plan.tdee} kcal`
                     : "Baseado em RP + Eric Helms + Layne Norton"}
                 </p>
               </div>
@@ -487,6 +529,24 @@ export default function NutritionPanel({ userProfile }: Props) {
                             className="px-3 py-2 rounded-lg text-xs font-medium transition-all"
                             style={{ background: sel ? "rgba(249,115,22,0.10)" : "#141414", border: sel ? "1px solid rgba(249,115,22,0.30)" : "1px solid rgba(255,255,255,0.06)", color: sel ? "#fafafa" : "#a1a1aa" }}>
                             {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Tipo de dieta */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "#52525b" }}>Tipo de Dieta</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {dietTypeOptions.map((opt) => {
+                        const sel = dietType === opt.value;
+                        return (
+                          <button key={opt.value} type="button" onClick={() => setDietType(opt.value)}
+                            className="flex flex-col px-3 py-2.5 rounded-xl text-left transition-all"
+                            style={{ background: sel ? "rgba(16,185,129,0.08)" : "#141414", border: sel ? "1px solid rgba(16,185,129,0.20)" : "1px solid rgba(255,255,255,0.06)" }}>
+                            <span className="text-xs font-semibold" style={{ color: sel ? "#fafafa" : "#a1a1aa" }}>{opt.label}</span>
+                            <span className="text-xs mt-0.5 leading-snug" style={{ color: "#52525b" }}>{opt.desc}</span>
                           </button>
                         );
                       })}
@@ -643,11 +703,34 @@ export default function NutritionPanel({ userProfile }: Props) {
                         {plan.refeicoes.map((meal, i) => (
                           <div key={i} className="rounded-xl p-4" style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.06)" }}>
                             <div className="flex items-start justify-between mb-2">
-                              <div>
+                              <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm" style={{ color: "#fafafa" }}>{meal.nome}</p>
                                 <p className="text-xs" style={{ color: "#52525b" }}>{meal.horario}</p>
                               </div>
-                              <p className="text-orange-400 font-bold text-sm">{meal.calorias} kcal</p>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <p className="text-orange-400 font-bold text-sm">{meal.calorias} kcal</p>
+                                <button
+                                  onClick={() => handleReplaceMeal(i)}
+                                  disabled={recalculatingMeal !== null}
+                                  title="Recalcular esta refeição"
+                                  className="w-6 h-6 flex items-center justify-center rounded-lg transition-all disabled:opacity-40"
+                                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#52525b" }}
+                                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#10b981"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(16,185,129,0.25)"; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#52525b"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+                                >
+                                  {recalculatingMeal === i ? (
+                                    <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                    </svg>
+                                  ) : (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/>
+                                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
                             </div>
                             <div className="flex gap-3 text-xs mb-3">
                               <span className="text-blue-400">P: {meal.proteina}g</span>

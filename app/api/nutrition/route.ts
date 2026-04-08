@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { BodyData, NutritionPlan, NutritionRequest } from "@/types/nutrition";
+import { BodyData, DietType, NutritionPlan, NutritionRequest } from "@/types/nutrition";
 
 // ─── TDEE Calculation (Mifflin-St Jeor — most validated formula) ─────────────
 function calculateBMR(body: BodyData): number {
@@ -76,9 +76,23 @@ function getMacroTargets(
   return { protein, fat, carbs };
 }
 
+// ─── Diet type constraints ─────────────────────────────────────────────────────
+function getDietContext(dietType?: DietType): string {
+  if (!dietType || dietType === "Onívoro") return "";
+  const constraints: Record<string, string> = {
+    "Vegetariano": "DIETA VEGETARIANA: sem carnes ou frutos do mar. Fontes de proteína: ovos, laticínios, leguminosas (feijão, lentilha, grão-de-bico), tofu, tempeh, seitan, proteína de soja. Evitar: frango, carne bovina, peixe.",
+    "Vegano": "DIETA VEGANA: sem nenhum produto animal (sem carnes, ovos, laticínios, mel). Fontes de proteína: tofu, tempeh, seitan, lentilha, feijão, edamame, proteína de ervilha/arroz. Suplementar vitamina B12 e vitamina D obrigatoriamente.",
+    "Keto / Low-carb": "DIETA CETOGÊNICA/LOW-CARB: limitar carboidratos a 20-50g/dia máximo. Aumentar gorduras para 60-70% das calorias. Fontes: ovos, carnes gordas, abacate, azeite, nozes, queijo, brócolis, espinafre. Evitar: arroz, pão, massa, frutas (exceto berries em pequenas doses).",
+    "Paleo": "DIETA PALEO: apenas alimentos não processados. Permitido: carnes, peixes, ovos, vegetais, frutas, nozes, tubérculos. Evitar: grãos, leguminosas, laticínios, açúcar refinado, alimentos industrializados.",
+    "Mediterrâneo": "DIETA MEDITERRÂNEA: ênfase em peixes, azeite de oliva, vegetais, leguminosas, grãos integrais, frutas e nozes. Proteína animal com moderação (principalmente peixes e aves). Vinho tinto opcional com moderação.",
+    "Low Carb": "DIETA LOW CARB: reduzir carboidratos para 80-130g/dia. Priorizar proteínas e gorduras saudáveis. Evitar açúcares simples, pão branco, arroz branco. Preferir carboidratos de baixo índice glicêmico (aveia, batata-doce, leguminosas).",
+  };
+  return `\nRESTRIÇÕES ALIMENTARES — ${dietType}:\n${constraints[dietType] ?? ""}\n`;
+}
+
 // ─── Prompt builder ───────────────────────────────────────────────────────────
 function buildNutritionPrompt(data: NutritionRequest, tdee: number, targetCals: number, macros: { protein: number; fat: number; carbs: number }, trainingTime?: string): string {
-  const { bodyData, level, goals, equipment } = data;
+  const { bodyData, level, goals, equipment, dietType } = data;
   const isAdvanced = ["Avançado", "Atleta / Competidor"].includes(level);
   const isCompetitor = level === "Atleta / Competidor";
   const isContestPrep = goals.includes("Contest Prep / Definição");
@@ -126,7 +140,8 @@ DADOS DO ATLETA:
 • Objetivos: ${goals.join(", ")}
 • Equipamento: ${equipment}
 • Nível de atividade: ${bodyData.activityLevel}
-
+• Tipo de dieta: ${dietType ?? "Onívoro"}
+${getDietContext(dietType)}
 CÁLCULO PRÉ-DEFINIDO (Mifflin-St Jeor):
 • TDEE: ${tdee} kcal/dia
 • Meta calórica: ${targetCals} kcal/dia (${deficit > 0 ? "+" + deficit + " surplus" : deficit + " déficit"})
