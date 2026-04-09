@@ -176,23 +176,22 @@ export default function Home() {
                     {/* Backdrop */}
                     <div className="fixed inset-0 z-40" onClick={() => setToolsMenuOpen(false)} />
                     {/* Dropdown panel */}
-                    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl p-3"
-                      style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.08)', minWidth: '204px', boxShadow: '0 16px 40px rgba(0,0,0,0.6)' }}>
+                    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl p-4"
+                      style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.08)', width: '264px', boxShadow: '0 16px 40px rgba(0,0,0,0.6)' }}>
                       <p className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: '#52525b' }}>Ferramentas</p>
-                      {/* Grid 4 columns — each cell: button + label */}
-                      <div className="grid grid-cols-4 gap-1" onClick={() => setToolsMenuOpen(false)}>
+                      <div className="grid grid-cols-4 gap-x-2 gap-y-4" onClick={() => setToolsMenuOpen(false)}>
                         {[
-                          { label: "Progresso",   node: <ProgressStats /> },
-                          { label: "Recuperação", node: <MuscleRecoveryMap /> },
-                          { label: "1RM",         node: <OneRMCalculator /> },
-                          { label: "Análise",     node: <PhotoAnalysis userLevel={lastFormData?.level} exerciseNames={workout?.exercicios?.map(e => e.nome)} /> },
-                          { label: "Medidas",     node: <BodyTracker /> },
-                          { label: "Suplementos", node: <SupplementTracker /> },
-                          { label: "Perfil",      node: <UserProfile /> },
+                          { label: "Progresso",  node: <ProgressStats /> },
+                          { label: "Músculos",   node: <MuscleRecoveryMap /> },
+                          { label: "1RM",        node: <OneRMCalculator /> },
+                          { label: "Análise",    node: <PhotoAnalysis userLevel={lastFormData?.level} exerciseNames={workout?.exercicios?.map(e => e.nome)} /> },
+                          { label: "Medidas",    node: <BodyTracker /> },
+                          { label: "Suplem.",    node: <SupplementTracker /> },
+                          { label: "Perfil",     node: <UserProfile /> },
                         ].map(({ label, node }) => (
-                          <div key={label} className="flex flex-col items-center gap-1">
+                          <div key={label} className="flex flex-col items-center gap-1.5">
                             {node}
-                            <span style={{ color: '#52525b', fontSize: '9px', lineHeight: 1 }}>{label}</span>
+                            <span className="text-center leading-tight" style={{ color: '#52525b', fontSize: '10px' }}>{label}</span>
                           </div>
                         ))}
                       </div>
