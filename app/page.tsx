@@ -115,6 +115,19 @@ export default function Home() {
 
       <Onboarding />
 
+      {/* Tool components — sempre montados fora da tela; modais usam fixed e aparecem normalmente */}
+      <div style={{ position: 'fixed', left: -9999, top: 0, width: 0, height: 0, overflow: 'visible' }}>
+        <span id="ghost-progress"><ProgressStats /></span>
+        <span id="ghost-muscles"><MuscleRecoveryMap /></span>
+        <span id="ghost-1rm"><OneRMCalculator /></span>
+        <span id="ghost-analysis">
+          <PhotoAnalysis userLevel={lastFormData?.level} exerciseNames={workout?.exercicios?.map(e => e.nome)} />
+        </span>
+        <span id="ghost-body"><BodyTracker /></span>
+        <span id="ghost-suppl"><SupplementTracker /></span>
+        <span id="ghost-profile"><UserProfile /></span>
+      </div>
+
       {/* WorkoutHistory drawer */}
       <WorkoutHistory isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} onLoad={handleLoadFromHistory} />
 
@@ -176,35 +189,42 @@ export default function Home() {
                   <div className="fixed inset-0 z-40" onClick={() => setToolsMenuOpen(false)} />
                 )}
 
-                {/* Painel SEMPRE montado — esconde via CSS para não desmontar os modais */}
-                <div
-                  className="absolute right-0 top-full mt-2 z-50 rounded-2xl p-4"
-                  style={{
-                    background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.08)',
-                    width: '264px', boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-                    opacity: toolsMenuOpen ? 1 : 0,
-                    pointerEvents: toolsMenuOpen ? 'auto' : 'none',
-                    transition: 'opacity 0.12s',
-                  }}
-                >
-                  <p className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: '#52525b' }}>Ferramentas</p>
-                  <div className="grid grid-cols-4 gap-x-2 gap-y-4" onClick={() => setToolsMenuOpen(false)}>
-                    {[
-                      { label: "Progresso", node: <ProgressStats /> },
-                      { label: "Músculos",  node: <MuscleRecoveryMap /> },
-                      { label: "1RM",       node: <OneRMCalculator /> },
-                      { label: "Análise",   node: <PhotoAnalysis userLevel={lastFormData?.level} exerciseNames={workout?.exercicios?.map(e => e.nome)} /> },
-                      { label: "Medidas",   node: <BodyTracker /> },
-                      { label: "Suplem.",   node: <SupplementTracker /> },
-                      { label: "Perfil",    node: <UserProfile /> },
-                    ].map(({ label, node }) => (
-                      <div key={label} className="flex flex-col items-center gap-1.5">
-                        {node}
-                        <span className="text-center leading-tight" style={{ color: '#52525b', fontSize: '10px' }}>{label}</span>
-                      </div>
-                    ))}
+                {/* Painel do menu — só proxy buttons, sem componentes reais */}
+                {toolsMenuOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 z-50 rounded-2xl p-4 animate-fade-in"
+                    style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.08)', width: '264px', boxShadow: '0 16px 40px rgba(0,0,0,0.6)' }}
+                  >
+                    <p className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: '#52525b' }}>Ferramentas</p>
+                    <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+                      {([
+                        { id: 'ghost-progress', label: 'Progresso', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg> },
+                        { id: 'ghost-muscles',  label: 'Músculos',  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="2"/><path d="M12 7v8"/><path d="M8 10h8"/><path d="M9 21l3-4 3 4"/></svg> },
+                        { id: 'ghost-1rm',      label: '1RM',       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 4v16M18 4v16M4 8h4M16 8h4M4 16h4M16 16h4M8 12h8"/></svg> },
+                        { id: 'ghost-analysis', label: 'Análise',   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> },
+                        { id: 'ghost-body',     label: 'Medidas',   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> },
+                        { id: 'ghost-suppl',    label: 'Suplem.',   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg> },
+                        { id: 'ghost-profile',  label: 'Perfil',    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+                      ] as { id: string; label: string; icon: React.ReactNode }[]).map(({ id, label, icon }) => (
+                        <div key={id} className="flex flex-col items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setToolsMenuOpen(false);
+                              (document.querySelector(`#${id} button`) as HTMLButtonElement | null)?.click();
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150"
+                            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', color: '#a1a1aa' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = '#f97316'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = '#a1a1aa'; }}
+                          >
+                            {icon}
+                          </button>
+                          <span className="text-center leading-tight" style={{ color: '#52525b', fontSize: '10px' }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <AuthButton />
